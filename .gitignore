@@ -1,0 +1,5 @@
+node_modules
+src/bower_components
+
+# Don't track build output
+dist/

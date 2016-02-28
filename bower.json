@@ -1,0 +1,24 @@
+{
+  "name": "p5-karllongman",
+  "description": "Project 5 - Neighborhood Map",
+  "main": "index.js",
+  "authors": [
+    "karl longman <karl_longman@hotmail.com>"
+  ],
+  "license": "ISC",
+  "moduleType": [],
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^2.2.1",
+    "knockout": "^3.4.0",
+    "bootstrap": "^3.3.6",
+    "font-awesome": "^4.5.0"
+  }
+}
