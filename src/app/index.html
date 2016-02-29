@@ -3,10 +3,28 @@
   <head>
     <meta charset="utf-8">
     <title>test P5 Neighborhood map</title>
+    <!-- LIBRARY STYLE LINKS -->
+    <link href="css/library/bootstrap.css" rel="stylesheet">
+    <link href="css/library/bootstrap-theme.css" rel="stylesheet">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <!-- STYLE LINKS -->
+    <link href="css/style.css" rel="stylesheet">
   </head>
   <body>
+    <!-- CONTENT START-->
     <p>
-      test P5 quick very quick 
+      test P5 quick very quick and all that iskhjgjkg
     </p>
+    <input id="pac-input" class="controls" type="text" placeholder="Search Box">
+    <!-- MAP -->
+    <div class="map-view" id="map"></div>
+    <!-- CONTENT END -->
+    <!-- LIBRARY SCRIPTS -->
+    <script src="js/library/jquery.js"></script>
+    <script src="js/library/knockout.debug.js"></script>
+    <script src="js/library/bootstrap.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places&callback=initMap"></script>
+    <!-- SCRIPTS -->
+    <script src="js/app.js"></script>
   </body>
 </html>

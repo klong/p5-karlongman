@@ -1,1 +1,21 @@
-/*kkjhkjhhh*/
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.controls {
+  margin-right: 20px;
+  margin-top: 20px;
+}
+
+.map-view {
+  background-color: red;
+  width: 80%;
+  height: 100%;
+}
+#map {
+  background-color: teal;
+  height: 100%;
+  margin: 50px;
+  padding: 0;
+}
