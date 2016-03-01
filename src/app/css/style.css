@@ -1,8 +1,41 @@
+
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
 }
+body {
+	 padding: 50px 0;
+	 font-size: 13px;
+   font-family: 'Noticia Text', serif;
+	 font-style: normal;
+	 font-weight: 400;
+}
+
+p.weight1 {
+	 font-family: "Noticia Text";
+	 font-weight: 400;
+	 font-style: italic;
+	 font-size: 36px;
+	 line-height: 30px;
+}
+
+p.weight2 {
+	 font-family: "Noticia Text";
+	 font-weight: 400;
+	 font-style: normal;
+	 font-size: 36px;
+	 line-height: 30px;
+}
+
+p.weight3 {
+	 font-family: "Noticia Text";
+	 font-weight: 700;
+	 font-style: italic;
+	 font-size: 36px;
+	 line-height: 30px;
+}
+
 .controls {
   margin-right: 20px;
   margin-top: 20px;
@@ -10,12 +43,17 @@ html, body {
 
 .map-view {
   background-color: red;
-  width: 80%;
   height: 100%;
 }
 #map {
   background-color: teal;
-  height: 100%;
-  margin: 50px;
-  padding: 0;
+  height: 50%;
+  margin: 20px;
+}
+.list-area {
+  background-color: silver;
+}
+
+.list-area-h2 {
+  font-size: 1em;
 }
