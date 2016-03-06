@@ -80,7 +80,7 @@ $(document).ready(function() {
     // Knockout
     // V&A REST service
 
-    if ((window.google) && (window.ko) && (window.appData.length > 0)) {
+    if ((window.google) && (window.ko) && (sampleData.length > 0)) {
       console.log('INIT APP Running');
       initMap();
       console.log(window.appData);
@@ -162,7 +162,8 @@ $(document).ready(function() {
 
     var map = new google.maps.Map(document.getElementById('map'), {
       center: bristolLatLong,
-      zoom: 13
+      zoom: 13,
+      mapTypeId: google.maps.MapTypeId.TERRAIN
     });
 
     var infowindow = new google.maps.InfoWindow({
