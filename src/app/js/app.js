@@ -47,7 +47,6 @@ $(document).ready(function() {
       if (obj.dataType === 'json') {
         window.appData.push(data);
       }
-
       addMessage(obj.name + ' loaded 😀 with status:' + textStatus);
 
       // NOTE: try calling initApp
@@ -84,21 +83,10 @@ $(document).ready(function() {
       console.log('INIT APP Running');
       initMap();
       console.log(window.appData);
-      //getVAData('http://www.vam.ac.uk/api/json/museumobject/search?q=' + 'cats');
-      //getVAData('http://www.vam.ac.uk/api/json/museumobject/search?namesearch=josiah+wedgwood');
-      //getVAData('http://www.vam.ac.uk/api/json/museumobject/search?placesearch=stockton');
-      // getVAData('http://www.vam.ac.uk/api/json/museumobject/search?q=bowl&materialsearch=silver&limit=30');
-      // getVAData('http://www.vam.ac.uk/api/json/museumobject/search?q=bowl&materialsearch=silver&limit=30&offset=30');
-      //getVAData('http://www.vam.ac.uk/api/json/museumobject/?q=rat&radius=10&images=1');
-
-      //
       return true;
     } else {
-
       return false;
     }
-
-
   }
 
   /////////////////////////
@@ -143,14 +131,10 @@ $(document).ready(function() {
 
   /// KNOCKOUT VIEWMODEL
   function AppViewModel() {
-
     var self = this;
-
     // the default neighborhood
     var defaultNeighborhood = 'Bristol';
-
     self.place = ko.observable(defaultNeighborhood);
-
   }
 
   function initMap() {
@@ -193,7 +177,6 @@ $(document).ready(function() {
       if (places.length === 0) {
         return;
       }
-      //console.dir(places);
 
       // Clear current markers off the map
       markers.forEach(function(marker) {
@@ -232,7 +215,4 @@ $(document).ready(function() {
       map.fitBounds(bounds);
     });
   }
-
-
-
 });
