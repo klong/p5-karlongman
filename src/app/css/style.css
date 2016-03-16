@@ -42,12 +42,19 @@ p.weight3 {
 }
 
 .map-view {
-  background-color: red;
-  height: 100%;
+  height: 500px;
+  width: 100%;
 }
+
+.map-panel {
+  background-color: lightGray;
+  height: 100%;
+  width: 100%;
+}
+
 #map {
-  background-color: teal;
-  height: 50%;
+  background-color: beige;
+  height: 100%;
   margin: 20px;
 }
 .list-area {
