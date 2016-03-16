@@ -72,10 +72,10 @@ var MusuemApp = function() {
         MusuemApp.viewModel = result;
         MusuemApp.viewModel.init();
         ko.applyBindings(MusuemApp.viewModel);
-        console.dir(MusuemApp.viewModel);
-        console.log('initViewModel done');
+        //console.dir(MusuemApp.viewModel);
+        //console.log('initViewModel done');
       } else {
-        console.log('initViewModel after ' + obj.name + ' ' + result);
+        //console.log('initViewModel after ' + obj.name + ' ' + result);
       }
       /////////////////////////////////////////////////////////////////
     });
@@ -86,7 +86,7 @@ var MusuemApp = function() {
       addMessage(obj.name + ' not loaded 😞 with error:' + errorThrown);
     });
     request.always(function(jqXHR, textStatus, errorThrown) {
-      console.log(obj.name + ' ' + textStatus);
+      //console.log(obj.name + ' ' + textStatus);
     });
   }
 
@@ -97,7 +97,6 @@ var MusuemApp = function() {
   }
 
   function musuemDataReady() {
-    console.log(musuemData.length);
     return (musuemData.length == initMusuemData.length);
   }
 
@@ -109,21 +108,19 @@ var MusuemApp = function() {
     // musuemData - has at least one musuem object results data
 
     if ((window.google) && (window.ko) && musuemDataReady()) {
-      console.log('START initViewModel');
-      var vm = new NeighborhoodApp();
-      //initMap();
+      var vm = new NeighborhoodViewModel();
       return vm;
     } else {
-      console.log('initViewModel not ready');
+      //console.log('initViewModel not ready');
       return false;
     }
   }
 
   // Knockoutjs VIEWMODEL
-  var NeighborhoodApp = function() {
+  var NeighborhoodViewModel = function() {
 
     var localLocation = {
-      // default local location is Bristol, UK
+      // default locallocation is Bristol, UK
       lat: 51.4335763,
       lng: -2.6070057
     };
@@ -131,7 +128,13 @@ var MusuemApp = function() {
     // map model for google map
     var mapsModel = {
       // observable array for museum objects in app
-      musuemObjects: ko.observableArray()
+      musuemObjects: ko.observableArray(),
+      // single map info window will be used to display museum object details
+      infowindow: new google.maps.InfoWindow({
+        content: ""
+      }),
+      searchPlace: ko.observable(),
+      placeLabel: "pop"
     };
 
     // generic model for musuem object
@@ -168,8 +171,9 @@ var MusuemApp = function() {
           var value = valueAccessor();
           google.maps.event.addListener(autocomplete, 'place_changed', function() {
             var place = autocomplete.getPlace();
-            console.log(place); // log the google API place
-            updateAddress(place, value);
+            if (place.hasOwnProperty("address_components")) {
+              updateLocation(place, value);
+            }
           });
         }
       };
@@ -185,6 +189,26 @@ var MusuemApp = function() {
       };
     };
 
+    // method to subscribe address changes
+    var registerSubscribers = function() {
+      // fire before from address is changed
+      mapsModel.fromAddress.subscribe(function(oldValue) {
+        removeMarker(oldValue);
+      }, null, "beforeChange");
+
+      // fire before to address is changed
+      mapsModel.toAddress.subscribe(function(oldValue) {
+        removeMarker(oldValue);
+      }, null, "beforeChange");
+    };
+
+
+    var updateLocation = function(place, value) {
+      var newLoc = place.geometry.location;
+      mapsModel.searchPlace = newLoc;
+      centerMap(place.geometry.location);
+    };
+
     // method to center map based on location
     var centerMap = function(location) {
       map.setCenter(location);
@@ -192,12 +216,11 @@ var MusuemApp = function() {
     };
 
     var init = function() {
-      console.log("INITING");
       setLocalLocation(); // set browser location if service is allowed
       configureBindingHandlers();
       //registerSubscribers();
     };
-    // expose module public functions and variables to global environment
+    // NeighborhoodViewModel module public functions and variables
     return {
       init: init,
       mapsModel: mapsModel,
@@ -205,93 +228,14 @@ var MusuemApp = function() {
     };
 
   };
-
+  // MuseumApp module public functions and variables
   return {
     musuemData: musuemData,
     viewModel: viewModel
   };
 
 }(); // NOTE: this function is an Immediately-Invoked Function Expression IIFE
-// END MusuemApp module
-
-function initMap() {
-  // initialise google map
-  var bristolLatLong = {
-    lat: 51.4500,
-    lng: -2.5833
-  };
-
-  var map = new google.maps.Map(document.getElementById('map'), {
-    center: bristolLatLong,
-    zoom: 13,
-    mapTypeId: google.maps.MapTypeId.TERRAIN
-  });
-
-  var infowindow = new google.maps.InfoWindow({
-    content: ""
-  });
-
-  // Create the search box and link it to the UI element.
-  var input = document.getElementById('pac-input');
-  var searchBox = new google.maps.places.SearchBox(input);
-  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(input);
-
-  // Bias the SearchBox results towards current map's viewport.
-  map.addListener('bounds_changed', function() {
-    searchBox.setBounds(map.getBounds());
-  });
-
-  // array for map markers
-  var markers = [];
-
-  // Listen for the event fired when the user selects a prediction and retrieve
-  // more details for that place.
-  searchBox.addListener('places_changed', function() {
-    var places;
-
-    places = searchBox.getPlaces();
-    // google maps API call returns array of 'places' from keyword/s
-    if (places.length === 0) {
-      return;
-    }
-
-    // Clear current markers off the map
-    markers.forEach(function(marker) {
-      marker.setMap(null);
-    });
-    // reset the markers array
-    markers = [];
-
-    // For each place, get the icon, name and location.
-    var bounds = new google.maps.LatLngBounds();
-
-    places.forEach(function(place) {
-      var icon = {
-        url: place.icon,
-        size: new google.maps.Size(71, 71),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(17, 34),
-        scaledSize: new google.maps.Size(50, 50)
-      };
-
-      // Create a marker for each place.
-      markers.push(new google.maps.Marker({
-        map: map,
-        icon: icon,
-        title: place.name,
-        position: place.geometry.location
-      }));
-
-      if (place.geometry.viewport) {
-        // Only geocodes have viewport.
-        bounds.union(place.geometry.viewport);
-      } else {
-        bounds.extend(place.geometry.location);
-      }
-    });
-    map.fitBounds(bounds);
-  });
-}
+// END MusuemApp MODULE
 
 
 function VaMarkerSummary(data) {

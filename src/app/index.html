@@ -19,8 +19,8 @@
     <div class="col-md-12">
       <div class="panel panel-default">
         <div class="panel-heading">Search Location:
-          <!-- SEARCH INPUT -->
-          <input id="pac-input" class="controls" type="text" data-bind="text: ">
+          <label for="autocompleteLocation" data-bind="text: mapsModel.placeLabel"></label>
+          <input id="autocompleteLocation" type="text" class="form-control" data-bind="addressAutoComplete: MusuemApp.viewModel.mapsModel.searchPlace" placeholder="Enter your from address">
         </div>
         <div class="map-panel panel-body">
           <div data-bind="mapPanel" class="map-view"></div>
