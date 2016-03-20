@@ -3,11 +3,16 @@
 /////////////////////////////////////////////////////
 
 var MusuemApp = function() {
-  // initAppLibs array defines the external libraries
+  //initAppLibs array defines the external libraries
   // and initMusuemData defines the JSON data we need
   // before our app can run
   var self = this;
-  var musuemData = []; // initial empty array for museum json REST objects
+  var defaultLocation = {
+    // Greenwich, UK
+    lat: 51.4800,
+    lng: 0
+  };
+  var musuemData = [];
   var viewModel = false;
 
   var initAppLibs = [{
@@ -22,13 +27,26 @@ var MusuemApp = function() {
     dataType: 'script',
     url: 'https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js',
     isLoaded: 'no'
+  }, {
+    // wordcloud2 api
+    name: 'wordcloud2',
+    dataType: 'script',
+    url: '/js/library/wordcloud2.js',
+    isLoaded: 'no'
   }];
+  /// V&A museum REST JSON data -
 
+  // var initMusuemData = [{
+  //   name: 'V&A Museum Collection for default location',
+  //   dataType: 'json',
+  //   url: 'http://www.vam.ac.uk/api/json/museumobject/search?q=bowl&materialsearch=metal&limit=10',
+  //   isLoaded: 'no'
+  // }];
   var initMusuemData = [{
-    // silver bowls - victoria & albert museum rest json objects
-    name: 'V&A Museum Collection - Silver Bowls',
+    // silve-r bowls - victoria & albert museum rest json objects
+    name: 'V&A Museum Collection - places 50km near Leeds',
     dataType: 'json',
-    url: 'http://www.vam.ac.uk/api/json/museumobject/search?q=bowl&materialsearch=metal&limit=10',
+    url: 'http://www.vam.ac.uk/api/json/place/search?latitude=53.799722&longitude=-1.549167&radius=50&orderby=distance',
     isLoaded: 'no'
   }, {
     // wooden chairs - victoria & albert museum rest json objects
@@ -36,16 +54,44 @@ var MusuemApp = function() {
     dataType: 'json',
     url: 'http://www.vam.ac.uk/api/json/museumobject/search?q=chair&materialsearch=wooden&limit=10',
     isLoaded: 'no'
-  }, {
-    // sppons - victoria & albert museum rest json objects
-    name: 'V&A Museum Collection - Spoons',
-    dataType: 'json',
-    url: 'http://www.vam.ac.uk/api/json/museumobject/search?q=spoon&limit=10',
-    isLoaded: 'no'
   }];
 
-  $.each(initAppLibs, ajaxGetAppResource); // asyn load the libraries needed for app
-  $.each(initMusuemData, ajaxGetAppResource); // async load the initial museum data for app
+  // var initMusuemData = [{
+  //   // silve-r bowls - victoria & albert museum rest json objects
+  //   name: 'V&A Museum Collection - Silve-r Bowls',
+  //   dataType: 'json',
+  //   url: 'http://www.vam.ac.uk/api/json/museumobject/search?q=bowl&materialsearch=metal&limit=10',
+  //   isLoaded: 'no'
+  // }, {
+  //   // wooden chairs - victoria & albert museum rest json objects
+  //   name: 'V&A Museum Collection - Wooden Chairs',
+  //   dataType: 'json',
+  //   url: 'http://www.vam.ac.uk/api/json/museumobject/search?q=chair&materialsearch=wooden&limit=10',
+  //   isLoaded: 'no'
+  // }, {
+  //   // sppons - victoria & albert museum rest json objects
+  //   name: 'V&A Museum Collection - Spoons',
+  //   dataType: 'json',
+  //   url: 'http://www.vam.ac.uk/api/json/museumobject/search?q=spoon&limit=10',
+  //   isLoaded: 'no'
+  // }];
+
+  // asyn get/load javascript libraries needed by app
+  $.each(initAppLibs, ajaxGetAppResource);
+
+  // check if localStorage is supported by browser
+  if (typeof(Storage) !== "undefined") {
+    // check if app has stored localStorage from a previous run of app
+    if (localStorage.musuemData) {
+      // set musuemData to contain localStorage of previous data
+      musuemData = (JSON.parse(localStorage.getItem("musuemData")));
+    }
+  }
+
+  if (musuemData.length === 0) {
+    // async get default JSON data of V&A museum objects for app
+    $.each(initMusuemData, ajaxGetAppResource);
+  }
 
   function ajaxGetAppResource(index, obj) {
     //  load async (AJAX) external javascript or json data for app
@@ -60,6 +106,9 @@ var MusuemApp = function() {
       obj.isLoaded = 'loaded';
       if (obj.dataType === 'json') {
         musuemData.push(data);
+        // store musuemData in browsesrs localStorage
+        localStorage.setItem("musuemData", JSON.stringify(musuemData));
+        addMessage(obj.name + ' JSON 😀 added to local storage:' + textStatus);
       }
       addMessage(obj.name + ' loaded 😀 with status:' + textStatus);
       //////////////////////////////////////////////////////////////////
@@ -119,48 +168,54 @@ var MusuemApp = function() {
   // Knockoutjs VIEWMODEL
   var NeighborhoodViewModel = function() {
 
-    var localLocation = {
-      // default locallocation is Bristol, UK
-      lat: 51.4335763,
-      lng: -2.6070057
-    };
-
     // map model for google map
     var mapsModel = {
+      localLocation: ko.observable({
+        lng: null,
+        lat: null
+      }),
       // observable array for museum objects in app
       musuemObjects: ko.observableArray(),
       // single map info window will be used to display museum object details
       infowindow: new google.maps.InfoWindow({
         content: ""
       }),
-      searchPlace: ko.observable(),
+      searchPlaces: ko.observableArray(),
       placeLabel: "pop"
     };
 
-    // generic model for musuem object
-    var MuseumObjectModel = function() {
+    // generic model for V&A musuem object
+    var vaMuseumObjectModel = function() {
       this.marker = ko.observable();
-      this.location = ko.observable();
-      this.musuemObjID = ko.observable();
+      this.geoLoc = ko.observable();
+      this.vaMusuemObjectNum = ko.observable();
     };
 
     // method to try and retrieve the users local location
-    var setLocalLocation = function() {
+    var getLocalLocation = function() {
       if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            localLocation.lat = position.coords.latitude;
-            localLocation.lng = position.coords.longitude;
-            console.log("sucessfully retrieved local location. Lat [" + localLocation.lat + '] lng [' + localLocation.lng + ']');
+        navigator.geolocation.getCurrentPosition(function(geoPosition) {
+            var newLoc = {
+              lat: 0,
+              lng: 0
+            };
+            newLoc.lat = geoPosition.coords.latitude;
+            newLoc.lng = geoPosition.coords.longitude;
+            mapsModel.localLocation(newLoc);
+            console.log("sucessfully retrieved local location. Lat [" + mapsModel.localLocation().lat + '] lng [' + mapsModel.localLocation().lng + ']');
           },
           function(error) {
-            console.log('Could not get current coords, using Bristol as default: ' + error.message);
+            console.log('Could not get current coords, using Greenwich as default: ' + error.message);
           });
       }
     };
 
+    //localLocation = setLocalLocation();
+
     // Method to add custom binding handlers to knockout
     var configureBindingHandlers = function() {
       // custom binding for address auto complete
+      // code modified from book 'KnockoutJS by Example' by Adan Jaswal ISBN: 9781785288548
       ko.bindingHandlers.addressAutoComplete = {
         init: function(element, valueAccessor) {
           // create the autocomplete object
@@ -172,7 +227,8 @@ var MusuemApp = function() {
           google.maps.event.addListener(autocomplete, 'place_changed', function() {
             var place = autocomplete.getPlace();
             if (place.hasOwnProperty("address_components")) {
-              updateLocation(place, value);
+              updateMapLocation(place, value);
+              map.setZoom(11);
             }
           });
         }
@@ -181,10 +237,30 @@ var MusuemApp = function() {
       ko.bindingHandlers.mapPanel = {
         init: function(element, valueAccessor) {
           map = new google.maps.Map(element, {
-            zoom: 10,
-            mapTypeId: google.maps.MapTypeId.TERRAIN
+            zoom: 1, // show whole world map by default
+            //mapTypeId: google.maps.MapTypeId.TERRAIN
           });
-          centerMap(localLocation);
+          centerMap(MusuemApp.defaultLocation);
+        }
+      };
+      // custom binding handler for wordMap panel
+      ko.bindingHandlers.wordCloud = {
+        init: function(element, valueAccessor) {
+          var options = {
+            list: [
+              ['piggy', 3],['wolf',1],['house',2]
+            ],
+            gridSize: 18,
+            weightFactor: 3,
+            fontFamily: 'Finger Paint, cursive, sans-serif',
+            color: '#f0f0c0',
+            hover: window.drawBox,
+            click: function(item) {
+              alert(item[0] + ': ' + item[1]);
+            },
+            backgroundColor: '#001f00'
+          };
+          WordCloud(element, options);
         }
       };
     };
@@ -203,10 +279,10 @@ var MusuemApp = function() {
     };
 
 
-    var updateLocation = function(place, value) {
+    var updateMapLocation = function(place, value) {
       var newLoc = place.geometry.location;
       mapsModel.searchPlace = newLoc;
-      centerMap(place.geometry.location);
+      map.panTo(newLoc);
     };
 
     // method to center map based on location
@@ -216,22 +292,23 @@ var MusuemApp = function() {
     };
 
     var init = function() {
-      setLocalLocation(); // set browser location if service is allowed
+      // get users location if browser location service allows
+      getLocalLocation();
       configureBindingHandlers();
       //registerSubscribers();
     };
     // NeighborhoodViewModel module public functions and variables
     return {
       init: init,
-      mapsModel: mapsModel,
-      localLocation: localLocation
+      mapsModel: mapsModel
     };
 
   };
   // MuseumApp module public functions and variables
   return {
     musuemData: musuemData,
-    viewModel: viewModel
+    viewModel: viewModel,
+    defaultLocation: defaultLocation
   };
 
 }(); // NOTE: this function is an Immediately-Invoked Function Expression IIFE
@@ -239,13 +316,8 @@ var MusuemApp = function() {
 
 
 function VaMarkerSummary(data) {
-  var result = data.records;
-
-  console.dir(data);
-  console.log(result.length + ' results');
-
-  for (var i = 0; i < result.length; i++) {
-    var fields = result[i].fields;
+  for (var i = 0; i < data.records.length; i++) {
+    var fields = data.records[i].fields;
     console.log(fields.object + ' ' + fields.place.toUpperCase() + ' lat:' + fields.latitude + ' long:' + fields.longitude);
   }
 }
