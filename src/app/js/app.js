@@ -54,6 +54,11 @@ var MusuemApp = function() {
     dataType: 'json',
     url: 'http://www.vam.ac.uk/api/json/museumobject/search?q=chair&materialsearch=wooden&limit=10',
     isLoaded: 'no'
+  }, {
+    name: 'V&A Museum Collection - museum object',
+    dataType: 'json',
+    url: 'http://www.vam.ac.uk/api/json/museumobject/O1240872',
+    isLoaded: 'no'
   }];
 
   // var initMusuemData = [{
@@ -76,21 +81,17 @@ var MusuemApp = function() {
   //   isLoaded: 'no'
   // }];
 
-  // asyn get/load javascript libraries needed by app
-  $.each(initAppLibs, ajaxGetAppResource);
+  $.each(initAppLibs, ajaxGetAppResource); // asyn get/load javascript libraries needed by app
 
-  // check if localStorage is supported by browser
   if (typeof(Storage) !== "undefined") {
-    // check if app has stored localStorage from a previous run of app
+    // if localStorage is supported by browser
     if (localStorage.musuemData) {
-      // set musuemData to contain localStorage of previous data
+      // if app has stored musuemData in localStorage from a previous run
       musuemData = (JSON.parse(localStorage.getItem("musuemData")));
+    } else {
+      //no previous museum data in localStorage
+      $.each(initMusuemData, ajaxGetAppResource);   // asyn get JSON musuem data needed by app
     }
-  }
-
-  if (musuemData.length === 0) {
-    // async get default JSON data of V&A museum objects for app
-    $.each(initMusuemData, ajaxGetAppResource);
   }
 
   function ajaxGetAppResource(index, obj) {
@@ -145,6 +146,13 @@ var MusuemApp = function() {
     $('#log-area').append(paragraph);
   }
 
+  function appLibsReady() {
+    function isLoaded (element, index, obj) {
+      return (element.isLoaded === 'loaded');
+    }
+    return initAppLibs.every(isLoaded);
+  }
+
   function musuemDataReady() {
     return (musuemData.length == initMusuemData.length);
   }
@@ -155,12 +163,12 @@ var MusuemApp = function() {
     // Google - for Google Maps API present
     // ko - for knockout.js library
     // musuemData - has at least one musuem object results data
-
-    if ((window.google) && (window.ko) && musuemDataReady()) {
+    //((window.google) && (window.ko) && (window.WordCloud) && musuemDataReady())
+    if  (appLibsReady() && musuemDataReady()) {
       var vm = new NeighborhoodViewModel();
       return vm;
     } else {
-      //console.log('initViewModel not ready');
+      //console.log('app not able to initialise');
       return false;
     }
   }
@@ -168,31 +176,11 @@ var MusuemApp = function() {
   // Knockoutjs VIEWMODEL
   var NeighborhoodViewModel = function() {
 
-    // map model for google map
-    var mapsModel = {
-      localLocation: ko.observable({
-        lng: null,
-        lat: null
-      }),
-      // observable array for museum objects in app
-      musuemObjects: ko.observableArray(),
-      // single map info window will be used to display museum object details
-      infowindow: new google.maps.InfoWindow({
-        content: ""
-      }),
-      searchPlaces: ko.observableArray(),
-      placeLabel: "pop"
-    };
-
-    // generic model for V&A musuem object
-    var vaMuseumObjectModel = function() {
-      this.marker = ko.observable();
-      this.geoLoc = ko.observable();
-      this.vaMusuemObjectNum = ko.observable();
-    };
-
     // method to try and retrieve the users local location
     var getLocalLocation = function() {
+      if (mapsModel.koLocalLocation() !== false) {
+
+      }
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(function(geoPosition) {
             var newLoc = {
@@ -201,21 +189,47 @@ var MusuemApp = function() {
             };
             newLoc.lat = geoPosition.coords.latitude;
             newLoc.lng = geoPosition.coords.longitude;
-            mapsModel.localLocation(newLoc);
-            console.log("sucessfully retrieved local location. Lat [" + mapsModel.localLocation().lat + '] lng [' + mapsModel.localLocation().lng + ']');
+            console.log('sucessfully retrieved local location ' + newLoc.lat + ' ' + newLoc.lng);
+            mapsModel.koLocalLocation(newLoc);
           },
           function(error) {
-            console.log('Could not get current coords, using Greenwich as default: ' + error.message);
+            console.log('Could not get current local coords ' + error.message);
           });
       }
     };
 
-    //localLocation = setLocalLocation();
+    // maps model for google map
+    var mapsModel = {
+      // koLocalLocation is used to allow a button to set map to the browser geolocation
+      // if service not allowed then button is not visible
+      koLocalLocation: ko.observable(false),
+      // a map info window that will be reused to display different museum object details
+      infowindow: new google.maps.InfoWindow({
+        content: ""
+      }),
+      // observable array for museum objects within selected place
+      koMusuemObjects: ko.observableArray(),
+      // koMuseumObjPlaces observable array holds
+      // for the V&A place markers on map
+      koMuseumObjPlaces: ko.observableArray(),
+      //
+      koPlaceLabel: ko.observable('world')
+    };
+
+    // generic model for V&A musuem object
+    var vaMuseumObjectModel = function() {
+      self = this;
+      self.marker = {};
+      self.geoLoc = {};
+      self.vaMusuemObjectNum = {};
+    };
 
     // Method to add custom binding handlers to knockout
     var configureBindingHandlers = function() {
       // custom binding for address auto complete
       // code modified from book 'KnockoutJS by Example' by Adan Jaswal ISBN: 9781785288548
+
+      // custom knockout binding handler for input autocomplete
       ko.bindingHandlers.addressAutoComplete = {
         init: function(element, valueAccessor) {
           // create the autocomplete object
@@ -226,14 +240,26 @@ var MusuemApp = function() {
           var value = valueAccessor();
           google.maps.event.addListener(autocomplete, 'place_changed', function() {
             var place = autocomplete.getPlace();
-            if (place.hasOwnProperty("address_components")) {
-              updateMapLocation(place, value);
+            if (!place.geometry) {
+              console.log("Autocomplete's returned place contains no geometry");
+
+              return;
+            }
+            // If the place has a geometry, then present it on a map.
+            if (place.geometry.viewport) {
+              map.fitBounds(place.geometry.viewport);
+            } else {
+              map.setCenter(place.geometry.location);
               map.setZoom(11);
+            }
+            if (place.address_components) {
+              address = place.address_components[0] && place.address_components[0].short_name || '';
+              mapsModel.koPlaceLabel(address); // update ko.observable form label
             }
           });
         }
       };
-      // custom binding handler for maps panel
+      // custom knockout binding handler for map panel
       ko.bindingHandlers.mapPanel = {
         init: function(element, valueAccessor) {
           map = new google.maps.Map(element, {
@@ -248,7 +274,12 @@ var MusuemApp = function() {
         init: function(element, valueAccessor) {
           var options = {
             list: [
-              ['piggy', 3],['wolf',1],['house',2]
+              ['piggy', 13],
+              ['wolf', 3],
+              ['house', 4],
+              ['teapot', 43],
+              ['hounder', 10],
+              ['flat iron', 5]
             ],
             gridSize: 18,
             weightFactor: 3,
@@ -256,7 +287,7 @@ var MusuemApp = function() {
             color: '#f0f0c0',
             hover: window.drawBox,
             click: function(item) {
-              alert(item[0] + ': ' + item[1]);
+              console.log(item[0] + ': ' + item[1]);
             },
             backgroundColor: '#001f00'
           };
@@ -267,22 +298,28 @@ var MusuemApp = function() {
 
     // method to subscribe address changes
     var registerSubscribers = function() {
-      // fire before from address is changed
-      mapsModel.fromAddress.subscribe(function(oldValue) {
-        removeMarker(oldValue);
+      // fire before place is changed
+      mapsModel.koPlaceLabel.subscribe(function(oldValue) {
+        //removeMarker(oldValue);
+        console.log('place was '+ oldValue);
+      }, null, "beforeChange");
+      // fire before local Location is changed
+      mapsModel.koLocalLocation.subscribe(function(oldValue) {
+        //removeMarker(oldValue);
+        console.log('local location was '+ oldValue);
+
       }, null, "beforeChange");
 
-      // fire before to address is changed
-      mapsModel.toAddress.subscribe(function(oldValue) {
-        removeMarker(oldValue);
-      }, null, "beforeChange");
     };
-
 
     var updateMapLocation = function(place, value) {
       var newLoc = place.geometry.location;
       mapsModel.searchPlace = newLoc;
       map.panTo(newLoc);
+    };
+
+    var mapGoLocal = function () {
+      console.log(mapsModel.koLocalLocation());
     };
 
     // method to center map based on location
@@ -292,10 +329,9 @@ var MusuemApp = function() {
     };
 
     var init = function() {
-      // get users location if browser location service allows
-      getLocalLocation();
       configureBindingHandlers();
-      //registerSubscribers();
+      registerSubscribers();
+      getLocalLocation(); // get users browser location service allowed
     };
     // NeighborhoodViewModel module public functions and variables
     return {
@@ -306,9 +342,13 @@ var MusuemApp = function() {
   };
   // MuseumApp module public functions and variables
   return {
+    NeighborhoodViewModel: NeighborhoodViewModel,
     musuemData: musuemData,
     viewModel: viewModel,
-    defaultLocation: defaultLocation
+    defaultLocation: defaultLocation,
+    initAppLibs: initAppLibs,
+    initMusuemData: initMusuemData,
+    appLibsReady: appLibsReady
   };
 
 }(); // NOTE: this function is an Immediately-Invoked Function Expression IIFE

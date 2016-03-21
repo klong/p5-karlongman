@@ -19,8 +19,9 @@
     <div class="col-md-12">
       <div class="panel panel-default">
         <div class="panel-heading">Search Location:
-          <label for="autocompleteLocation" data-bind="text: mapsModel.placeLabel"></label>
-          <input id="autocompleteLocation" type="text" class="form-control" data-bind="addressAutoComplete: MusuemApp.viewModel.mapsModel.searchPlace" placeholder="Enter your from address">
+          <label for="autocompleteLocation" data-bind="text: mapsModel.koPlaceLabel"></label>
+          <input id="autocompleteLocation" type="text" class="form-control" data-bind="addressAutoComplete: mapsModel.searchPlace" placeholder="Enter a place to show musuem objects">
+          <button class="btn" type="button" name="mapGoLocal" data-bind="visible: mapsModel.koLocalLocation, click: NeighborhoodViewModel.mapGoLocal">Go Local</button>
         </div>
         <div class="map-panel panel-body">
           <div data-bind="mapPanel" class="map-view"></div>
@@ -29,9 +30,7 @@
     </div>
   </div>
   <div class="row">
-    <div class="col-md-12 wordCloud" data-bind="wordCloud">
-
-    </div>
+    <div class="col-md-12 wordCloud" data-bind="wordCloud"></div>
   </div>
   <div class="list-area" id="listArea">
     <h2 class="list-area-h2">Results</h2>
