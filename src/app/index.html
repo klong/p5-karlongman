@@ -15,13 +15,15 @@
 
 <body>
   <!-- CONTENT START-->
+
+  <!-- MAP AREA START -->
   <div class="row">
     <div class="col-md-12">
       <div class="panel panel-default">
         <div class="panel-heading">Search Location:
-          <label for="autocompleteLocation" data-bind="text: mapsModel.koPlaceLabel"></label>
-          <input id="autocompleteLocation" type="text" class="form-control" data-bind="addressAutoComplete: mapsModel.searchPlace" placeholder="Enter a place to show musuem objects">
-          <button class="btn" type="button" name="mapGoLocal" data-bind="visible: mapsModel.koLocalLocation, click: NeighborhoodViewModel.mapGoLocal">Go Local</button>
+          <label for="autocompleteLocation" data-bind="text: mapsModel.obsPlaceLabel"></label>
+          <button id="btn_golocal" class="btn btn-sm" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalLocation,  click: mapHelpers.mapGoLocal">Your Neighbourhood</button>
+          <input id="autocompleteLocation" type="text" class="form-control controls" data-bind="addressAutoComplete" placeholder="Enter a new place name to find ...">
         </div>
         <div class="map-panel panel-body">
           <div data-bind="mapPanel" class="map-view"></div>
@@ -29,15 +31,31 @@
       </div>
     </div>
   </div>
+  <!-- MAP AREA END -->
+
+  <!-- AREA START -->
   <div class="row">
-    <div class="col-md-12 wordCloud" data-bind="wordCloud"></div>
+    <ul id="places">
+      <li class="placesListItem"></li>
+    </ul>
   </div>
-  <div class="list-area" id="listArea">
-    <h2 class="list-area-h2">Results</h2>
-    <ul id="places"></ul>
+  <!-- AREA END -->
+
+  <!-- WORD CLOUD START -->
+  <!-- <div class="row">
+        <div class="col-md-3 wordCloud" data-bind="wordCloud"></divi>
+  </div> -->
+  <!-- WORD CLOUD END -->
+
+  <!-- DEBUG LIST START -->
+  <div class="row">
+    <div id="log-area" class="resultsArea">
+
+    </div>
   </div>
-  <div id="log-area"></div>
-  <!-- CONTENT END -->
+  <!-- DEBUG LIST END -->
+
+  <!-- CONTENT END-->
   <!-- ESSENTIAL LIBRARY SCRIPTS -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <!-- APP SCRIPTS -->

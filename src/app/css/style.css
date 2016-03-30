@@ -1,72 +1,105 @@
-
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
 }
 body {
-	 padding: 50px 0;
-	 font-size: 13px;
-   font-family: 'Noticia Text', serif;
-	 font-style: normal;
-	 font-weight: 400;
+  padding: 0;
+  font-size: 14px;
+  font-family: 'Noticia Text', serif;
+  font-style: normal;
+  font-weight: 400;
 }
-
 p.weight1 {
-	 font-family: "Noticia Text";
-	 font-weight: 400;
-	 font-style: italic;
-	 font-size: 36px;
-	 line-height: 30px;
+  font-family: "Noticia Text";
+  font-weight: 400;
+  font-style: italic;
+  font-size: 36px;
+  line-height: 30px;
 }
-
 p.weight2 {
-	 font-family: "Noticia Text";
-	 font-weight: 400;
-	 font-style: normal;
-	 font-size: 36px;
-	 line-height: 30px;
+  font-family: "Noticia Text";
+  font-weight: 400;
+  font-style: normal;
+  font-size: 36px;
+  line-height: 30px;
 }
-
 p.weight3 {
-	 font-family: "Noticia Text";
-	 font-weight: 700;
-	 font-style: italic;
-	 font-size: 36px;
-	 line-height: 30px;
+  font-family: "Noticia Text";
+  font-weight: 700;
+  font-style: italic;
+  font-size: 36px;
+  line-height: 30px;
 }
-
 .controls {
   margin-right: 20px;
   margin-top: 20px;
 }
 
-.map-view {
-  height: 320px;
-  width: 100%;
+.something{
+  background-color: snow;
+  height: 200px;
 }
 
+.map-view {
+  height: 400px;
+  width: 100%;
+}
 .map-panel {
-  background-color: lightGray;
+  background-color: salmon;
   height: 100%;
   width: 100%;
 }
-
 #map {
   background-color: beige;
   height: 100%;
-  margin: 20px;
+  margin: 12px;
+}
+#autocompleteLocation {
+  background-color: #fff;
+  font-family: Roboto;
+  font-size: 12px;
+  font-weight: 300;
+  margin-left: 12px;
+  padding: 0 11px 0 13px;
+  text-overflow: ellipsis;
+  width: 200px;
+}
+
+.controls {
+  margin-top: 8px;
+  border: 1px solid transparent;
+  border-radius: 2px 0 0 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 32px;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#btn_golocal {
+  float: right;
 }
 
 .wordCloud {
-  height: 320px;
-  width: 100%;
+  list-style: none;
+  height: 240px;
 }
 
-.list-area {
-  background-color: silver;
+.resultsArea {
+  background-color: snow;
+  text-align: left;
+  padding-left: 16px;
+}
+
+.message {
+  padding: 10px;
+}
+
+.placesListItem {
+    list-style: none;
 }
 
 .list-area-h2 {
-  font-size: 1em;
+  font-size: 1.3em;
 }
