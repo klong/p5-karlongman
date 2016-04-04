@@ -21,17 +21,32 @@
     <div class="col-md-12">
       <div class="panel panel-default">
         <div class="panel-heading">Search Location:
-          <label for="autocompleteLocation" data-bind="text: mapsModel.obsPlaceLabel"></label>
+          <label data-bind="text: mapsModel.obsPlaceLabel"></label>
           <button id="btn_golocal" class="btn btn-sm" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalLocation,  click: mapHelpers.mapGoLocal">Your Neighbourhood</button>
-          <input id="autocompleteLocation" type="text" class="form-control controls" data-bind="addressAutoComplete" placeholder="Enter a new place name to find ...">
+          <input id="autocompleteLocation" type="text" class="form-control controls" data-bind="addressAutoComplete">
         </div>
         <div class="map-panel panel-body">
           <div data-bind="mapPanel" class="map-view"></div>
         </div>
       </div>
     </div>
+
   </div>
   <!-- MAP AREA END -->
+  <div class="row">
+    <div class="col-md-4">
+      <label data-bind="fadeInText: mapsModel.placeName"></label>
+    </div>
+    <div class="col-md-4">
+      <label data-bind="fadeInText: mapsModel.obsCurrentSearchPlaceId"></label>
+    </div>
+    <div class="col-md-4">
+      <input data-bind="textInput: mapsModel.placeName " />
+      <div data-bind="fadeInText: mapsModel.placeName"></div>
+      <div data-bind="fadeInText: mapsModel.placeName"></div>
+    </div>
+  </div>
+
 
   <!-- AREA START -->
   <div class="row">
@@ -39,6 +54,11 @@
       <li class="placesListItem"></li>
     </ul>
   </div>
+
+  <div id="results">
+    RESULTS
+  </div>
+
   <!-- AREA END -->
 
   <!-- WORD CLOUD START -->
