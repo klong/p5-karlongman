@@ -3,7 +3,9 @@
 //---------------------------------------------------------
 
 var MusuemApp = (function(window) {
-  var MusuemViewModel = {};
+  var MusuemViewModel = {
+    status: false
+  };
   var musuemData = {};
   var musuemDataReady = {
     status: false
@@ -47,13 +49,13 @@ var MusuemApp = (function(window) {
     url: 'http://www.vam.ac.uk/api/json/place/search', // V&A musuem collection.places search REST service
     isLoaded: 'no'
   }, {
-    placeID: "ChIJYdizgWaDcUgRH9eaSy6y5I4", // Greenwich observatory UK, google PlaceID
+    placeID: "ChIJYdizgWaDcUgRH9eaSy6y5I4", // bristol UK, google PlaceID
     placeName: 'Bristol, uk',
     name: 'V&A places with musuem objects, 10km around Bristol, UK',
     dataType: 'json',
     search_parameters: {
-      latitude: 51.514725,
-      longitude: -2.577667,
+      latitude: 51.468468,
+      longitude: -2.6609199,
       orderby: "distance", // order results by closest distance to search loc
       radius: 10, //radius in km around loc to search for musuem collection.places
       images: 1, // only results that have photos
@@ -72,7 +74,7 @@ var MusuemApp = (function(window) {
     //-----------------------------------
     // get AJAX JAVASCRIPT resources
     //-----------------------------------
-    $.each(initAppLibs, initGetAppResources);
+    $.each(initAppLibs, ajaxGetAppResources);
     addMessage('AJAX javascript LOAD REQUESTS : ' + initAppLibs.length);
     //---------------------------------------------------------
     // get JSON resources required for musuem app
@@ -91,7 +93,7 @@ var MusuemApp = (function(window) {
         //---------------------------------
         //  get AJAX JSON data resources
         //---------------------------------
-        $.each(initMusuemData, initGetAppResources);
+        $.each(initMusuemData, ajaxGetAppResources);
         addMessage('localStorage musuemDataStorage not present');
         addMessage('AJAX Musuem Data LOAD REQUESTS : ' + initMusuemData.length);
       }
@@ -99,7 +101,7 @@ var MusuemApp = (function(window) {
       // localStorage service not available or disabled by user
       // so get AJAX JSON data resources
       //---------------------------------
-      $.each(initMusuemData, initGetAppResources);
+      $.each(initMusuemData, ajaxGetAppResources);
       console.log('localstorage: FALSE');
       addMessage('AJAX Musuem Data LOAD REQUESTS : ' + initMusuemData.length);
     }
@@ -123,7 +125,7 @@ var MusuemApp = (function(window) {
     return storage;
   }
 
-  function initGetAppResources(index, resourceRefObj) {
+  function ajaxGetAppResources(index, resourceRefObj) {
     //  load AJAX an external javascript or json data resource
     var request = $.ajax({
       url: resourceRefObj.url,
@@ -163,36 +165,28 @@ var MusuemApp = (function(window) {
         }
       }
       //------------------------------------------------------------------------------
-      // sorry, this seems a bit of hack to handle the async callbacks and
+      // sorry, this way seems a bit of hack to handle the async callbacks and
       // the requirement to only create and applyBindings to the knockout viewModel once
       // NOTE: on load resource success, try to initalise the museum app,
       // this can only happen when all app required scripts and musuemData is loaded
       //------------------------------------------------------------------------------
-      if (appLibsReadyP() && musuemDataReadyP()) {
-        musuemDataReady.status = true;
-        addMessage('--- Musuem App RESOURCES READY ---');
-        //-----------------------------------
-        // Create Knockout options & APP VIEWMODEL
-        //-----------------------------------
-        ko.options.deferUpdates = true;
-        var vm = new MusAppViewModel();
-        MusuemViewModel.vm = vm;
-        MusuemViewModel.status = true;
-        //-----------------------------------
-        //  apply bindings APP VIEWMODEL
-        //-----------------------------------
-        ko.applyBindings(MusuemViewModel.vm);
-        addMessage(' 😀 viewmodel READY');
-
-        if (localStorageP()) {
-          //--------------------------------------------------------------
-          // store array of musuem data resources objects in localStorage
-          //--------------------------------------------------------------
-          if (!localStorage.musuemDataStorage) {
-            // when no existing localStorage.musuemDataStorage
-            // save stringified version of musuemdata obj for future app runs
-            localStorage.musuemDataStorage = JSON.stringify(musuemData.data);
-          }
+      if (!MusuemViewModel.status) { // the MusuemViewModel does not exist
+        // only if All scripts and musuem data resources for the app are loaded
+        if (appLibsReadyP() && musuemDataReadyP()) {
+          musuemDataReady.status = true;
+          addMessage('--- Musuem App RESOURCES READY ---');
+          //-----------------------------------
+          // Create Knockout options & APP VIEWMODEL
+          //-----------------------------------
+          ko.options.deferUpdates = true;
+          var vm = new MusAppViewModel();
+          MusuemViewModel.vm = vm;
+          MusuemViewModel.status = true;
+          //-----------------------------------
+          //  apply bindings APP VIEWMODEL
+          //-----------------------------------
+          ko.applyBindings(MusuemViewModel.vm);
+          addMessage(' 😀 viewmodel READY');
         }
       }
       //-----------------------------------------------------------------------
@@ -221,7 +215,23 @@ var MusuemApp = (function(window) {
 
   // function to check if localStorage present or all external json data loaded
   function musuemDataReadyP() {
-    return (musuemDataReady.status || initMusuemData.every(isLoaded));
+    if (musuemDataReady.status || initMusuemData.every(isLoaded)) {
+      //--------------------------------------------------------------
+      // store array of musuem data resources objects in localStorage
+      //--------------------------------------------------------------
+      // localStorage is avaiable and not user disabled so store
+      // app int musuem data for future app runs
+      if (localStorageP()) {
+        if (!localStorage.musuemDataStorage) {
+          // when no existing localStorage.musuemDataStorage
+          // save stringified version of musuemdata obj for future app runs
+          localStorage.musuemDataStorage = JSON.stringify(musuemData.data);
+        }
+      }
+      return true;
+    } else {
+      return false;
+    }
   }
 
   // helper function to append a status paragraph to webpage log area
@@ -255,7 +265,7 @@ var MusuemApp = (function(window) {
       // if service not allowed then button is not visible
       obsUserLocalLocation: ko.observable(false),
       // observable OBSERVABLE ARRAY for museum objects within selected place
-      // obsMusuemPlaceObjects: ko.observableArray(),
+      obsMusuemPlaceObjects: ko.observableArray(),
       // // obsMuseumObjPlaces OBSERVABLE ARRAY for the V&A place markers on map
       // obsMuseumObjPlaces: ko.observableArray()
     };
@@ -273,6 +283,11 @@ var MusuemApp = (function(window) {
       return (curSearchPlace === null) ? '' : curSearchPlace.place_id;
     });
 
+    mapsModel.compCurrentPlaceIdLngLat = ko.computed(function() {
+      var curSearchPlace = mapsModel.obsSearchGooglePlace();
+      // update mapsModel observable with location
+      return (curSearchPlace === null) ? '' : mapsModel.obsSearchGooglePlace().geometry.location;
+    });
     // END mapsModel
     //---------------------------------------------------------------------------
 
@@ -291,7 +306,20 @@ var MusuemApp = (function(window) {
     };
 
     //-----------------------------------------------------
-    //  map helpers MODULE
+    //  musuemDataHelpers MODULE
+    //-----------------------------------------------------
+    var musuemDataHelpers = function() {
+      // functions TODO
+
+      return {
+
+      };
+    }(musuemDataHelpers);
+    //  END musuemDataHelpers MODULE
+    //-----------------------------------------------------
+
+    //-----------------------------------------------------
+    //  mapHelpers MODULE
     //-----------------------------------------------------
     var mapHelpers = function() {
 
@@ -344,6 +372,11 @@ var MusuemApp = (function(window) {
         mapsModel.infowindow.open(map, mapsModel.searchLocMarker);
       };
 
+      var mapGoHere = function() {
+        console.log('goHere' + map.getCenter());
+
+      };
+
       var mapGoLocal = function() {
         // note: users geolocation was converted and stored as a valid google maps place
         // update search location observable to be the same as users geolocation
@@ -356,17 +389,106 @@ var MusuemApp = (function(window) {
         map.setCenter(loc);
         google.maps.event.trigger(map, 'resize');
       };
-      //-----------------------------------------------------
-      //  mapHelpers - public vars & functions
-      //-----------------------------------------------------
+
+      function geocodeMapCenter() {
+        var map = mapsModel.googleMap;
+        var mapCenterlatlng = map.getCenter();
+        // google aps geocoder service
+        mapsModel.geocoder.geocode({
+          'location': mapCenterlatlng
+        }, function(results, status) {
+          if (status === google.maps.GeocoderStatus.OK) {
+            if (results) {
+              var postalCodeP = function(curElement, index) {
+                // local predicate function for JQuery.grep function - see below
+                // iterates through the address types in place objects returned by geocoder service
+                // looks for postal_code_prefix type location
+                var curTypes = curElement.types;
+                for (var i = 0; i < curTypes.length; i++) {
+                  if (curTypes[i] === "postal_code_prefix") {
+                    return true;
+                  }
+                }
+                return false;
+              };
+              // try and get a postal_code_prefix type of addresses if possible
+              // as a more general search name looks better than a 'rooftop' type of address
+              var postCodeResults = $.grep(results, postalCodeP);
+              var bestPlaceFromLoc = null;
+              if (postCodeResults.length > 0) {
+                bestPlaceFromLoc = postCodeResults[0];
+              } else {
+                // no postal_code address available
+                // so use first address in results as new place (a 'rooftop' type address)
+                bestPlaceFromLoc = results[0];
+              }
+              if (bestPlaceFromLoc !== null) {
+                map.setZoom(10); // the area of the 'search here' button is about 5km at this zoom level
+                var marker = new google.maps.Marker({
+                  position: mapCenterlatlng,
+                  map: map
+                });
+                mapsModel.infowindow.setContent(bestPlaceFromLoc.formatted_address);
+                mapsModel.infowindow.open(map, marker);
+              }
+
+            } else {
+              window.alert('No results found');
+            }
+          } else {
+            window.alert('Geocoder failed due to: ' + status);
+          }
+        });
+      }
+
+      var geocodePosition = function() {
+          mapsModel.geocoder.geocode({
+            'location': lnglatLiteral
+          }, function(results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+              if (results) {
+                var postalCodeP = function(curElement, index) {
+                  // local predicate function for JQuery.grep function - see below
+                  // iterates through the address types in place objects returned by geocoder service
+                  // looks for firdt postal code type location
+                  var curTypes = curElement.types;
+                  for (var i = 0; i < curTypes.length; i++) {
+                    if (curTypes[i] === "postal_code") {
+                      return true;
+                    }
+                  }
+                  return false;
+                };
+                // try and get a more postalcode general type of addresses if possible
+                // as rooftop type address is not allways correct for users geoposition
+                var postCodeResults = $.grep(results, postalCodeP);
+                if (postCodeResults.length > 0) {
+                  var newPostCodePlace = postCodeResults[0];
+                  mapsModel.obsUserLocalLocation(newPostCodePlace);
+                } else {
+                  // no postcode address available
+                  // so use first address in results as new place (a 'rooftop' type address)
+                  var newRoofTopPlace = results[0];
+                  mapsModel.obsUserLocalLocation(newRoofTopPlace);
+                }
+              }
+            }
+          });
+        };
+        //-----------------------------------------------------
+        //  mapHelpers - public vars & functions
+        //-----------------------------------------------------
       return {
         updateMapSearchLocation: updateMapSearchLocation,
+        mapGoHere: mapGoHere,
         mapGoLocal: mapGoLocal,
+        geocodeMapCenter: geocodeMapCenter,
         //centerMap: centerMap,
         pinMaker: pinMaker,
         updateMapPlace: updateMapPlace
       };
     }(mapHelpers);
+    //  END mapHelpers MODULE
     //-----------------------------------------------------
 
     // try and retrieve the users GEOLOCATION
@@ -440,6 +562,7 @@ var MusuemApp = (function(window) {
     //-----------------------------------------------------
     var koBindingHandlers = function() {
 
+      // debug helper that jquery fades text in/out when its binding value changes
       ko.bindingHandlers.fadeInText = {
         update: function(element, valueAccessor) {
           $(element).hide();
@@ -452,16 +575,19 @@ var MusuemApp = (function(window) {
       ko.bindingHandlers.mapPanel = {
         init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
           map = new google.maps.Map(element, {
-            disableDefaultUI: true,
-            mapTypeControl: true,
-            mapTypeControlOptions: {
-              style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-              position: google.maps.ControlPosition.TOP_RIGHT
-            },
+            //disableDefaultUI: true,
+            //mapTypeControl: true,
+            // mapTypeControlOptions: {
+            //   style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            //   position: google.maps.ControlPosition.TOP_RIGHT
+            // },
+            scaleControl: true,
             mapTypeId: google.maps.MapTypeId.TERRAIN,
             center: new google.maps.LatLng(51.478771, -0.011074),
             zoom: 1 // the whole world map before we have musuem data
           });
+
+          map.controls[google.maps.ControlPosition.CENTER].push(document.getElementById('btn_goHere'));
 
           mapsModel.googleMap = map; // debug helper
           mapsModel.geocoder = new google.maps.Geocoder(map);
@@ -488,10 +614,10 @@ var MusuemApp = (function(window) {
             }
           }
           // map zoom change event handler
-          map.addListener('zoom_changed', function() {
-            var zoomLevel = map.getZoom();
-            mapsModel.infowindow.setContent('Zoom: ' + map.getZoom());
-          });
+          // map.addListener('zoom_changed', function() {
+          //   var zoomLevel = map.getZoom();
+          //   mapsModel.infowindow.setContent('Zoom: ' + map.getZoom());
+          // });
           // map idle change event handler
           // map.addListener('idle', function() {
           //   var bounds = map.getBounds();
@@ -614,8 +740,11 @@ var MusuemApp = (function(window) {
       // event for AFTER obsSearchGooglePlace changed
       // thats is, a new place has been got from google api callback
       mapsModel.obsSearchGooglePlace.subscribe(function(placeValue) {
+        console.log('obsSearchGooglePlace changed');
         // google search place has changed so start AJAX get for new musuem objects
-        //var places = MusuemApp.initGetAppResources();
+        //var places = MusuemApp.ajaxGetAppResources();
+
+        // update the map to show obsSearchGooglePlace with custom marker
         mapHelpers.updateMapPlace(mapsModel.obsSearchGooglePlace());
       }, null, "change");
     };
@@ -667,7 +796,8 @@ var MusuemApp = (function(window) {
     return {
       // export PUBLIC functions and variables for MusAppViewModel -
       mapsModel: mapsModel,
-      mapHelpers: mapHelpers
+      mapHelpers: mapHelpers,
+      musuemDataHelpers: musuemDataHelpers
     };
     //---------------------------------------------------------
   };

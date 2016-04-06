@@ -23,6 +23,7 @@
         <div class="panel-heading">Search Location:
           <label data-bind="text: mapsModel.compPlaceLabel"></label>
           <button id="btn_golocal" class="btn btn-sm" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalLocation,  click: mapHelpers.mapGoLocal">Your Neighbourhood</button>
+          <button id="btn_goHere" class="btn btn-sm" type="button" name="mapGoHome" data-bind="click: mapHelpers.geocodeMapCenter">Search Here</button>
           <input id="autocompleteLocation" type="text" class="form-control controls" data-bind="addressAutoComplete">
         </div>
         <div class="map-panel panel-body">
@@ -43,7 +44,7 @@
     <div class="col-md-4">
       <input data-bind="textInput: mapsModel.placeName " />
       <div data-bind="fadeInText: mapsModel.placeName"></div>
-      <div data-bind="fadeInText: mapsModel.placeName"></div>
+      <div data-bind="fadeInText: mapsModel.compCurrentPlaceIdLngLat"></div>
     </div>
   </div>
 
