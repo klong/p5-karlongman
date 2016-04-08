@@ -15,25 +15,44 @@
 
 <body>
   <!-- CONTENT START-->
-
-  <!-- MAP AREA START -->
-  <div class="row">
-    <div class="col-md-12">
+  <div class="row app-container">
+    <button id="btn_goHere" class="btn btn-sm" type="button" name="mapGoHome" data-bind="click: mapHelpers.searchHere">Search Here</button>
+    <div class="row">
       <div class="panel panel-default">
-        <div class="panel-heading">Search Location:
-          <label data-bind="text: mapsModel.compPlaceLabel"></label>
-          <button id="btn_golocal" class="btn btn-sm" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalLocation,  click: mapHelpers.mapGoLocal">Your Neighbourhood</button>
-          <button id="btn_goHere" class="btn btn-sm" type="button" name="mapGoHome" data-bind="click: mapHelpers.geocodeMapCenter">Search Here</button>
-          <input id="autocompleteLocation" type="text" class="form-control controls" data-bind="addressAutoComplete">
-        </div>
-        <div class="map-panel panel-body">
-          <div data-bind="mapPanel" class="map-view"></div>
+        <div class="panel-heading">
+          <form data-bind="submit: mapHelpers.searchHere, update: mapsModel.placeName">
+            <label data-bind="text: mapsModel.compPlaceLabel"></label>
+            <input id="autocompleteLocation" type="text" class="form-control controls" data-bind="addressAutoComplete:">
+            <button id="btn_golocal" class="btn btn-sm controls" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalLocation,  click: mapHelpers.mapGoLocal">Your Neighbourhood</button>
+          </form>
         </div>
       </div>
     </div>
+    <!-- MAP AREA START -->
+    <div class="row map-container">
+      <div id="map" class="map-view" data-bind="mapPanel"></div>
+    </div>
+    <!-- MAP AREA END -->
 
+    <!-- PLACES LIST START -->
+    <div class="row" id="results" >
+      RESULTS
+      <div class="col-sm-12 area-places-list">
+        <ul class="place-list" id="places" data-bind="foreach: mapsModel.obsMusuemPlaceObjects">
+          <li class="places-list-item" data-bind="text: $data.metadata.place.formatted_address"></li>
+        </ul>
+      </div>
+    </div>
   </div>
-  <!-- MAP AREA END -->
+  <!-- PLACES LIST END -->
+
+  <!-- WORD CLOUD START -->
+  <!-- <div class="row">
+        <div class="col-md-3 wordCloud" data-bind="wordCloud"></divi>
+  </div> -->
+  <!-- WORD CLOUD END -->
+
+  <!-- DEBUG LIST START -->
   <div class="row">
     <div class="col-md-4">
       <label data-bind="fadeInText: mapsModel.placeName"></label>
@@ -46,36 +65,12 @@
       <div data-bind="fadeInText: mapsModel.placeName"></div>
       <div data-bind="fadeInText: mapsModel.compCurrentPlaceIdLngLat"></div>
     </div>
-  </div>
-
-
-  <!-- AREA START -->
-  <div class="row">
-    <ul id="places">
-      <li class="placesListItem"></li>
-    </ul>
-  </div>
-
-  <div id="results">
-    RESULTS
-  </div>
-
-  <!-- AREA END -->
-
-  <!-- WORD CLOUD START -->
-  <!-- <div class="row">
-        <div class="col-md-3 wordCloud" data-bind="wordCloud"></divi>
-  </div> -->
-  <!-- WORD CLOUD END -->
-
-  <!-- DEBUG LIST START -->
-  <div class="row">
-    <div id="log-area" class="resultsArea">
-
+    <div class="row">
+      <div id="log-area" class="resultsArea">
+      </div>
     </div>
   </div>
   <!-- DEBUG LIST END -->
-
   <!-- CONTENT END-->
   <!-- ESSENTIAL LIBRARY SCRIPTS -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>

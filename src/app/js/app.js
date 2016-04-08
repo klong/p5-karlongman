@@ -36,13 +36,13 @@ var MusuemApp = (function(window) {
   var initMusuemData = [{
     placeID: "ChIJ83WZp86p2EcRbMrkYqGncBQ", // Greenwich observatory UK, google PlaceID
     placeName: 'Greenwich, uk',
-    name: 'V&A places with musuem objects, 8km around Greenwich observatory UK',
+    name: 'V&A places with musuem objects, 10km around Greenwich observatory UK',
     dataType: 'json',
     search_parameters: {
       latitude: 51.479052,
       longitude: -0.011074,
       orderby: "distance", // order results by closest distance to search loc
-      radius: 8, //radius in km around loc to search for musuem collection.places
+      radius: 10, //radius in km around loc to search for musuem collection.places
       images: 1, // only results that have photos
       limit: 45 // note: 45 is max amount of musuem objects results allowed on a single AJAX call by API
     },
@@ -244,6 +244,7 @@ var MusuemApp = (function(window) {
   //   MusAppViewModel - Knockoutjs VIEWMODEL
   //----------------------------------------------------------------------------
   var MusAppViewModel = function() {
+
     //---------------------------
     //  maps Model
     //---------------------------
@@ -254,6 +255,8 @@ var MusuemApp = (function(window) {
       infowindow: new google.maps.InfoWindow({
         content: ''
       }),
+      mapMarkers: [],
+      placeTypeInPrefOrder: ["administrative_area_level_3", "administrative_area_level_2", "postal_town", "neighborhood"],
       //-----------------------------------------------------
       //  KnockoutJS observable & observableArray variables
       //-----------------------------------------------------
@@ -265,7 +268,7 @@ var MusuemApp = (function(window) {
       // if service not allowed then button is not visible
       obsUserLocalLocation: ko.observable(false),
       // observable OBSERVABLE ARRAY for museum objects within selected place
-      obsMusuemPlaceObjects: ko.observableArray(),
+      obsMusuemPlaceObjects: ko.observableArray([]),
       // // obsMuseumObjPlaces OBSERVABLE ARRAY for the V&A place markers on map
       // obsMuseumObjPlaces: ko.observableArray()
     };
@@ -357,7 +360,7 @@ var MusuemApp = (function(window) {
           map.fitBounds(place.geometry.viewport);
         } else {
           map.setCenter(place.geometry.location);
-          map.setZoom(13); // kind of city/town view bounds
+          //map.setZoom(13); // kind of city/town view bounds
         }
         // reposition and show the map searchLocMarker
         if (mapsModel.searchLocMarker !== null) {
@@ -390,48 +393,70 @@ var MusuemApp = (function(window) {
         google.maps.event.trigger(map, 'resize');
       };
 
-      function geocodeMapCenter() {
+      function searchHere() {
         var map = mapsModel.googleMap;
         var mapCenterlatlng = map.getCenter();
         // google aps geocoder service
         mapsModel.geocoder.geocode({
-          'location': mapCenterlatlng
+          'location': mapCenterlatlng,
+          'bounds': map.bounds // bias the search results to the visible area of map
         }, function(results, status) {
           if (status === google.maps.GeocoderStatus.OK) {
             if (results) {
-              var postalCodeP = function(curElement, index) {
-                // local predicate function for JQuery.grep function - see below
+              var politicalAreaP = function(curElement, index) {
+                // local function used by JQuery.grep function - see below
                 // iterates through the address types in place objects returned by geocoder service
-                // looks for postal_code_prefix type location
+                // looks for political type location
                 var curTypes = curElement.types;
-                for (var i = 0; i < curTypes.length; i++) {
-                  if (curTypes[i] === "postal_code_prefix") {
-                    return true;
-                  }
-                }
-                return false;
+
+                 for (var i = 0; i < curTypes.length; i++) {
+                   var place = curTypes[i];
+                   var count = mapsModel.placeTypeInPrefOrder.indexOf(place);
+                   if (count !== -1) {
+                     return true;
+                   }
+                 }
+                 return false;
               };
               // try and get a postal_code_prefix type of addresses if possible
               // as a more general search name looks better than a 'rooftop' type of address
-              var postCodeResults = $.grep(results, postalCodeP);
+              var politicalPlaceResults = $.grep(results, politicalAreaP);
               var bestPlaceFromLoc = null;
-              if (postCodeResults.length > 0) {
-                bestPlaceFromLoc = postCodeResults[0];
+              if (politicalPlaceResults.length > 0) {
+                bestPlaceFromLoc = politicalPlaceResults[0];
               } else {
-                // no postal_code address available
+                // no political address available
                 // so use first address in results as new place (a 'rooftop' type address)
+                console.log('no politicalAreaP address');
                 bestPlaceFromLoc = results[0];
               }
               if (bestPlaceFromLoc !== null) {
-                map.setZoom(10); // the area of the 'search here' button is about 5km at this zoom level
+                console.dir(politicalPlaceResults);
+                console.dir(bestPlaceFromLoc);
+                //map.setZoom(12); // the area of the 'search here' button is about 5km at this zoom level
                 var marker = new google.maps.Marker({
-                  position: mapCenterlatlng,
-                  map: map
+                  position: bestPlaceFromLoc.geometry.location,
+                  map: map,
+                  id: bestPlaceFromLoc.place_id
                 });
+                // add property object to store metadata about marker
+                marker.metadata = {
+                  place: bestPlaceFromLoc
+                };
+                // add click handler for marker
+                marker.addListener('click', function(e) {
+                  var myPlace = marker.metadata.place;
+                  var content = myPlace.types[0] + ' ' + myPlace.formatted_address + ' ' + marker.id;
+                  mapsModel.infowindow.setContent(content);
+                  mapsModel.infowindow.open(map, marker);
+                });
+                // add marker to array for access
+                mapsModel.obsMusuemPlaceObjects.push(marker);
+                mapsModel.mapMarkers.push(marker);
+                // open infowindow with debug data
                 mapsModel.infowindow.setContent(bestPlaceFromLoc.formatted_address);
                 mapsModel.infowindow.open(map, marker);
               }
-
             } else {
               window.alert('No results found');
             }
@@ -442,47 +467,47 @@ var MusuemApp = (function(window) {
       }
 
       var geocodePosition = function() {
-          mapsModel.geocoder.geocode({
-            'location': lnglatLiteral
-          }, function(results, status) {
-            if (status === google.maps.GeocoderStatus.OK) {
-              if (results) {
-                var postalCodeP = function(curElement, index) {
-                  // local predicate function for JQuery.grep function - see below
-                  // iterates through the address types in place objects returned by geocoder service
-                  // looks for firdt postal code type location
-                  var curTypes = curElement.types;
-                  for (var i = 0; i < curTypes.length; i++) {
-                    if (curTypes[i] === "postal_code") {
-                      return true;
-                    }
+        mapsModel.geocoder.geocode({
+          'location': lnglatLiteral
+        }, function(results, status) {
+          if (status === google.maps.GeocoderStatus.OK) {
+            if (results) {
+              var politicalAreaP = function(curElement, index) {
+                // local predicate function for JQuery.grep function - see below
+                // iterates through the address types in place objects returned by geocoder service
+                // looks for firdt postal code type location
+                var curTypes = curElement.types;
+                for (var i = 0; i < curTypes.length; i++) {
+                  if (curTypes[i] === "postal_code") {
+                    return true;
                   }
-                  return false;
-                };
-                // try and get a more postalcode general type of addresses if possible
-                // as rooftop type address is not allways correct for users geoposition
-                var postCodeResults = $.grep(results, postalCodeP);
-                if (postCodeResults.length > 0) {
-                  var newPostCodePlace = postCodeResults[0];
-                  mapsModel.obsUserLocalLocation(newPostCodePlace);
-                } else {
-                  // no postcode address available
-                  // so use first address in results as new place (a 'rooftop' type address)
-                  var newRoofTopPlace = results[0];
-                  mapsModel.obsUserLocalLocation(newRoofTopPlace);
                 }
+                return false;
+              };
+              // try and get a more postalcode general type of addresses if possible
+              // as rooftop type address is not allways correct for users geoposition
+              var postCodeResults = $.grep(results, politicalAreaP);
+              if (postCodeResults.length > 0) {
+                var newPostCodePlace = postCodeResults[0];
+                mapsModel.obsUserLocalLocation(newPostCodePlace);
+              } else {
+                // no postcode address available
+                // so use first address in results as new place (a 'rooftop' type address)
+                var newRoofTopPlace = results[0];
+                mapsModel.obsUserLocalLocation(newRoofTopPlace);
               }
             }
-          });
-        };
-        //-----------------------------------------------------
-        //  mapHelpers - public vars & functions
-        //-----------------------------------------------------
+          }
+        });
+      };
+      //-----------------------------------------------------
+      //  mapHelpers - public vars & functions
+      //-----------------------------------------------------
       return {
         updateMapSearchLocation: updateMapSearchLocation,
         mapGoHere: mapGoHere,
         mapGoLocal: mapGoLocal,
-        geocodeMapCenter: geocodeMapCenter,
+        searchHere: searchHere,
         //centerMap: centerMap,
         pinMaker: pinMaker,
         updateMapPlace: updateMapPlace
@@ -515,7 +540,7 @@ var MusuemApp = (function(window) {
           }, function(results, status) {
             if (status === google.maps.GeocoderStatus.OK) {
               if (results) {
-                var postalCodeP = function(curElement, index) {
+                var politicalAreaP = function(curElement, index) {
                   // local predicate function for JQuery.grep function - see below
                   // iterates through the address types in place objects returned by geocoder service
                   // looks for firdt postal code type location
@@ -529,13 +554,13 @@ var MusuemApp = (function(window) {
                 };
                 // try and get a more postalcode general type of addresses if possible
                 // as rooftop type address is not allways correct for users geoposition
-                var postCodeResults = $.grep(results, postalCodeP);
-                if (postCodeResults.length > 0) {
-                  var newPostCodePlace = postCodeResults[0];
-                  mapsModel.obsUserLocalLocation(newPostCodePlace);
+                var politicalPlaces = $.grep(results, politicalAreaP);
+                if (politicalPlaces.length > 0) {
+                  // first address to match 'political' type
+                  mapsModel.obsUserLocalLocation(politicalPlaces[0]);
                 } else {
                   // no postcode address available
-                  // so use first address in results as new place (a 'rooftop' type address)
+                  // so use first address in geocode results as new place
                   var newRoofTopPlace = results[0];
                   mapsModel.obsUserLocalLocation(newRoofTopPlace);
                 }
@@ -606,23 +631,36 @@ var MusuemApp = (function(window) {
                   map: map,
                   visible: false,
                   icon: mapHelpers.pinMaker("yellow"),
-                  clickable: false // prevent mouse click events as musuem place markers have the data to show
+                  //clickable: false, // prevent mouse click events as musuem place markers have the data to show
+                  id: firstPlace.place_id
                 });
                 // update observable for google place for museum object search
                 mapHelpers.updateMapSearchLocation(firstPlace);
+
+                mapsModel.searchLocMarker.addListener('click', function(e) {
+                  console.log('pppppp');
+                  console.dir(e);
+                  map.setCenter(mapsModel.searchLocMarker.getPosition());
+                });
               }
             }
           }
-          // map zoom change event handler
-          // map.addListener('zoom_changed', function() {
-          //   var zoomLevel = map.getZoom();
-          //   mapsModel.infowindow.setContent('Zoom: ' + map.getZoom());
-          // });
-          // map idle change event handler
-          // map.addListener('idle', function() {
-          //   var bounds = map.getBounds();
-          //
-          // });
+
+          //map zoom change event handler
+          map.addListener('zoom_changed', function() {
+            var zoomLevel = map.getZoom();
+            mapsModel.infowindow.setContent('Zoom: ' + map.getZoom());
+          });
+          //map idle change event handler
+          map.addListener('idle', function() {
+            //var bounds = map.getBounds();
+          });
+          // browser window resize event handler
+          google.maps.event.addDomListener(window, "resize", function() {
+            var center = map.getCenter();
+            google.maps.event.trigger(map, "resize");
+            map.setCenter(center);
+          });
         }
       };
 
@@ -682,7 +720,7 @@ var MusuemApp = (function(window) {
         update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
           var value = valueAccessor();
           var valueUnwrapped = ko.unwrap(value);
-          console.log('is:' + valueUnwrapped);
+          console.log('autocomplete is:' + valueUnwrapped);
         }
       };
 
@@ -830,6 +868,11 @@ $(function() {
       lng: -0.011074
     }
   };
+  // set height of map area to 50% of the document height
+  var halfDocumentHeight = ($(window).height() / 2);
+  $('#map').height(halfDocumentHeight);
+  $('#map').css('visibility', 'visible');
+  // $('#map').show();
   // call app init with inital placeID - Greenwich, UK
   MusuemApp.init(initPlaceRef);
 });
