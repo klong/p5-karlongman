@@ -16,14 +16,13 @@
 <body>
   <!-- CONTENT START-->
   <div class="row app-container">
-    <button id="btn_goHere" class="btn btn-sm" type="button" name="mapGoHome" data-bind="click: mapHelpers.searchHere">Search Here</button>
     <div class="row">
       <div class="panel panel-default">
         <div class="panel-heading">
           <form data-bind="submit: mapHelpers.searchHere, update: mapsModel.placeName">
             <label data-bind="text: mapsModel.compPlaceLabel"></label>
             <input id="autocompleteLocation" type="text" class="form-control controls" data-bind="addressAutoComplete:">
-            <button id="btn_golocal" class="btn btn-sm controls" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalLocation,  click: mapHelpers.mapGoLocal">Your Neighbourhood</button>
+            <button id="btn_golocal" class="btn btn-sm controls" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.mapGoLocal">Your Neighbourhood</button>
           </form>
         </div>
       </div>
@@ -38,7 +37,9 @@
     <div class="row" id="results" >
       RESULTS
       <div class="col-sm-12 area-places-list">
-        <ul class="place-list" id="places" data-bind="foreach: mapsModel.obsMusuemPlaceObjects">
+        <!-- map markers list -->
+        <ul class="place-list" id="places" data-bind="foreach: mapsModel.obsMusuemMarkerObjects">
+          <!-- map marker list item -->
           <li class="places-list-item" data-bind="text: $data.metadata.place.formatted_address"></li>
         </ul>
       </div>
