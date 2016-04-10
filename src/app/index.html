@@ -20,7 +20,7 @@
       <div class="panel panel-default">
         <div class="panel-heading">
           <form data-bind="submit: mapHelpers.searchHere, update: mapsModel.placeName">
-            <label data-bind="text: mapsModel.compPlaceLabel"></label>
+            <label data-bind="text: mapsModel.compSelectedPlace"></label>
             <input id="autocompleteLocation" type="text" class="form-control controls" data-bind="addressAutoComplete:">
             <button id="btn_golocal" class="btn btn-sm controls" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.mapGoLocal">Your Neighbourhood</button>
           </form>
@@ -40,7 +40,7 @@
         <!-- map markers list -->
         <ul class="place-list" id="places" data-bind="foreach: mapsModel.obsMusuemMarkerObjects">
           <!-- map marker list item -->
-          <li class="places-list-item" data-bind="text: $data.metadata.place.formatted_address"></li>
+          <li class="places-list-item" data-bind="text: $data.musuemData.place.formatted_address"></li>
         </ul>
       </div>
     </div>
@@ -59,7 +59,7 @@
       <label data-bind="fadeInText: mapsModel.placeName"></label>
     </div>
     <div class="col-md-4">
-      <label data-bind="fadeInText: mapsModel.compCurrentPlaceId"></label>
+      <label data-bind="text: 'dataReady ' + MusuemApp.musuemDataReady.status"></label>
     </div>
     <div class="col-md-4">
       <input data-bind="textInput: mapsModel.placeName " />
