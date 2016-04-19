@@ -22,11 +22,15 @@
           <form data-bind="submit: mapHelpers.searchHere, update: mapsModel.placeName">
             <label data-bind="text: mapsModel.compSelectedPlace"></label>
             <input id="autocompleteLocation" type="text" class="form-control controls" data-bind="addressAutoComplete:">
-            <button id="btn_golocal" class="btn btn-sm controls" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.mapGoLocal">Your Neighbourhood</button>
+            <button id="btn_golocal" class="btn btn-sm controls" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
           </form>
         </div>
       </div>
     </div>
+
+  <div class="row">
+    <button id="btn_goAll" class="btn btn-sm controls" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">show all</button>
+  </div>
     <!-- MAP AREA START -->
     <div class="row map-container">
       <div id="map" class="map-view" data-bind="mapPanel"></div>
@@ -38,9 +42,9 @@
       RESULTS
       <div class="col-sm-12 area-places-list">
         <!-- map markers list -->
-        <ul class="place-list" id="places" data-bind="foreach: mapsModel.obsMusuemMarkerObjects">
+        <ul class="place-list" id="places" data-bind="foreach: mapsModel.obsArrayMapMarkers">
           <!-- map marker list item -->
-          <li class="places-list-item" data-bind="text: $data.musuemData.place.formatted_address"></li>
+          <li class="places-list-item" data-bind="text: bestPlace.formatted_address + ' ' + prefPlaceMarker.visible, visible: showMarker, click: MusuemApp.MusuemViewModel.vm.mapHelpers.panMapToPlace(bestPlace)"></li>
         </ul>
       </div>
     </div>
