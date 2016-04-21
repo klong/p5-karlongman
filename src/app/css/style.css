@@ -86,7 +86,8 @@ p.weight3 {
 
 .wordCloud {
   list-style: none;
-  height: 240px;
+  height: 300px;
+  width: 100%;
 }
 
 .resultsArea {

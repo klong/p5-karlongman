@@ -3,10 +3,13 @@
 
 <head>
   <meta charset="utf-8">
+
+  <meta name="viewport" content="width=device-width" />
   <title>P5 Neighborhood map</title>
   <!-- LIBRARY STYLE LINKS -->
-  <link href="css/library/bootstrap.css" rel="stylesheet">
-  <link href="css/library/bootstrap-theme.css" rel="stylesheet">
+  <!-- <link href="css/library/bootstrap.css" rel="stylesheet">
+  <link href="css/library/bootstrap-theme.css" rel="stylesheet"> -->
+  <link href="css/library/semantic.css" rel="stylesheet">
   <!-- FONTS -->
   <link href="https://fonts.googleapis.com/css?family=Noticia+Text:400,700" rel="stylesheet" type="text/css">
   <!-- STYLE LINKS -->
@@ -15,63 +18,61 @@
 
 <body>
   <!-- CONTENT START-->
-  <div class="row app-container">
-    <div class="row">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <form data-bind="submit: mapHelpers.searchHere, update: mapsModel.placeName">
-            <label data-bind="text: mapsModel.compSelectedPlace"></label>
-            <input id="autocompleteLocation" type="text" class="form-control controls" data-bind="addressAutoComplete:">
-            <button id="btn_golocal" class="btn btn-sm controls" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
-          </form>
-        </div>
-      </div>
+  <div class="ui container">
+    <div class="ui stackable conatiner menu">
+      <form data-bind="submit: mapHelpers.searchHere, update: mapsModel.placeName">
+        <label data-bind="text: mapsModel.compSelectedPlace"></label>
+          <input id="autocompleteLocation" type="text" class="ui input" data-bind="addressAutoComplete:">
+          <button id="btn_golocal" class="ui right floated primary button" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
+      </form>
     </div>
 
-  <div class="row">
-    <button id="btn_goAll" class="btn btn-sm controls" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">show all</button>
-  </div>
+    <div class="">
+      <button id="btn_goAll" class="ui basic button" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">show all</button>
+    </div>
     <!-- MAP AREA START -->
-    <div class="row map-container">
-      <div id="map" class="map-view" data-bind="mapPanel"></div>
+    <div class="map-container">
+      <div class="map-view" id="map" data-bind="mapPanel"></div>
     </div>
     <!-- MAP AREA END -->
 
     <!-- PLACES LIST START -->
-    <div class="row" id="results" >
-      RESULTS
-      <div class="col-sm-12 area-places-list">
-        <!-- map markers list -->
-        <ul class="place-list" id="places" data-bind="foreach: mapsModel.obsArrayMapMarkers">
-          <!-- map marker list item -->
-          <li class="places-list-item" data-bind="text: bestPlace.formatted_address + ' ' + prefPlaceMarker.visible, visible: showMarker, click: MusuemApp.MusuemViewModel.vm.mapHelpers.panMapToPlace(bestPlace)"></li>
-        </ul>
+    <div class="results">
+      <!-- map markers list -->
+      <div id="places" class="ui segments" data-bind="foreach: mapsModel.obsArrayMapMarkers">
+        <!-- map marker list item -->
+        <div class="ui segment" data-bind="text: bestPlace.formatted_address + ' ' + prefPlaceMarker.visible, visible: showMarker, click: MusuemApp.MusuemViewModel.vm.mapHelpers.panMapToPlace(bestPlace)"></div>
       </div>
     </div>
+    <!-- PLACES LIST END -->
+
+    <!-- WORD CLOUD START -->
+    <div class="centered ui three column stackable grid ">
+      <div class="column">
+        <div id="wordCloudArea" class="wordCloud" data-bind="wordCloud: {cat:'pop'}"></div>
+      </div>
+      <div class="column">
+        <div id="wordCloudArea2" class="wordCloud" data-bind="wordCloud:"></div>
+      </div>
   </div>
-  <!-- PLACES LIST END -->
+    <!-- WORD CLOUD END -->
 
-  <!-- WORD CLOUD START -->
-  <!-- <div class="row">
-        <div class="col-md-3 wordCloud" data-bind="wordCloud"></divi>
-  </div> -->
-  <!-- WORD CLOUD END -->
-
-  <!-- DEBUG LIST START -->
-  <div class="row">
-    <div class="col-md-4">
-      <label data-bind="fadeInText: mapsModel.placeName"></label>
-    </div>
-    <div class="col-md-4">
-      <label data-bind="text: 'dataReady ' + MusuemApp.musuemDataReady.status"></label>
-    </div>
-    <div class="col-md-4">
-      <input data-bind="textInput: mapsModel.placeName " />
-      <div data-bind="fadeInText: mapsModel.placeName"></div>
-      <div data-bind="fadeInText: mapsModel.compCurrentPlaceIdLngLat"></div>
-    </div>
-    <div class="row">
-      <div id="log-area" class="resultsArea">
+    <!-- DEBUG LIST START -->
+    <div class="">
+      <div class="">
+        <label data-bind="fadeInText: mapsModel.placeName"></label>
+      </div>
+      <div class="">
+        <label data-bind="text: 'dataReady ' + MusuemApp.musuemDataReady.status"></label>
+      </div>
+      <div class="">
+        <input data-bind="textInput: mapsModel.placeName " />
+        <div data-bind="fadeInText: mapsModel.placeName"></div>
+        <div data-bind="fadeInText: mapsModel.compCurrentPlaceIdLngLat"></div>
+      </div>
+      <div class="">
+        <div id="log-area" class="resultsArea">
+        </div>
       </div>
     </div>
   </div>
@@ -80,6 +81,10 @@
   <!-- ESSENTIAL LIBRARY SCRIPTS -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <!-- APP SCRIPTS -->
+  <script src="js/library/semantic.js"></script>
+  <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+   <script src="https://rawgit.com/jasondavies/d3-cloud/master/build/d3.layout.cloud.js"></script>
+  <!-- <script src="js/library/d3.layout.cloud.js"></script> -->
   <script src="js/app.js"></script>
 </body>
 

@@ -29,16 +29,14 @@ var MusuemApp = (function() {
     url: 'https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js',
     isLoaded: 'no',
     test: "ko"
+  }, {
+    // wordcloud2 api
+    name: 'wordcloud2',
+    dataType: 'script',
+    url: '/js/library/wordcloud2.js',
+    isLoaded: 'no',
+    test: "wordcloud2"
   }];
-  // {
-  //   // wordcloud2 api
-  //   name: 'wordcloud2',
-  //   dataType: 'script',
-  //   url: '/js/library/wordcloud2.js',
-  //   isLoaded: 'no',
-  //   test: "wordcloud2"
-  // }
-
   //-------------------------------------------------------------------------
   // initMusuemPlaces defines the search locations for default musuemMarkers
   //-------------------------------------------------------------------------
@@ -239,6 +237,10 @@ var MusuemApp = (function() {
       //  KnockoutJS observable & observableArray variables
       //-----------------------------------------------------
       obsArrayMapMarkers: ko.observableArray([]), // array to store all map marker objects
+      obsArrayWordsMapList: ko.observableArray([{
+        text: "default",
+        size: 60
+      }]),
       obsSelectedPlace: ko.observable(false),
       // obsUserLocalPlace is used to allow a button to set map to the browser geolocation
       // if service not allowed then button is not visible
@@ -247,8 +249,8 @@ var MusuemApp = (function() {
       placeName: ko.observable('typograph')
     };
 
-    // add knockout computed variables outside object literal definition of mapsModel
-    // as referencing other ko.observables inside mapsModel not possible until defined
+    // add knockout computed variables outside of mapsModel object literal definition
+    // as referencing other ko.observables inside mapsModel not possible until defined?
     mapsModel.compSelectedPlace = ko.pureComputed(function() {
       var place = mapsModel.obsSelectedPlace();
       return (place === false) ? 'no selected place' : simpleFormattedplaceIdName(place);
@@ -265,6 +267,7 @@ var MusuemApp = (function() {
       // update mapsModel observable with location
       return (curSearchPlace === false) ? '' : mapsModel.obsSelectedPlace().geometry.location;
     });
+
     // END mapsModel
     //---------------------------------------------------------------------------
 
@@ -377,10 +380,8 @@ var MusuemApp = (function() {
     //-----------------------------------------------------
     var mapHelpers = function() {
 
-
-
       var filterMarkersToViewport = function() {
-        var result =[];
+        var result = [];
         var bounds = map.getBounds();
         var musuemMarkers = mapsModel.obsArrayMapMarkers();
         for (var i = 0; i < musuemMarkers.length; i++) { // loop through Markers Collection
@@ -424,7 +425,7 @@ var MusuemApp = (function() {
           musMarker.showMarker(true);
           bounds.extend(musMarker.prefPlaceMarker.getPosition());
         }
-      mapsModel.googleMap.fitBounds(bounds);
+        mapsModel.googleMap.fitBounds(bounds);
       };
 
       var pinMaker = function pinSymbol(colour) {
@@ -650,15 +651,6 @@ var MusuemApp = (function() {
       // custom knockout binding handler for GOOGLE MAP
       ko.bindingHandlers.mapPanel = {
         init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-          // default map display location
-          if (mapsModel.obsArrayMapMarkers) {
-            if (mapsModel.obsArrayMapMarkers.length > 0) {
-              // default location is first marker in obsArrayMapMarkers
-              //var firstPlace = mapsModel.obsArrayMapMarkers[0].prefPlaceMarker.place;
-              mapHelpers.selectPrefPlace();
-
-            }
-          }
           map = new google.maps.Map(element, {
             scaleControl: true,
             mapTypeId: google.maps.MapTypeId.TERRAIN,
@@ -673,7 +665,6 @@ var MusuemApp = (function() {
           var centerControl = new CenterControl(centerControlDiv, map);
           centerControlDiv.index = 1; // on top of other controls (e.g later added markers)
           map.controls[google.maps.ControlPosition.CENTER].push(centerControlDiv);
-          // TODO default location when app first run will be the first place in the musuem place data
 
           //map zoom change event handler
           map.addListener('zoom_changed', function() {
@@ -693,38 +684,38 @@ var MusuemApp = (function() {
             google.maps.event.trigger(map, "resize");
             map.setCenter(center);
           });
+          // NOTE CenterControl code from
+          // example https://developers.google.com/maps/documentation/javascript/examples/control-custom
+          function CenterControl(controlDiv, map) {
+            // Set CSS for the control border.
+            var controlUI = document.createElement('div');
+            controlUI.style.backgroundColor = 'rgba(255,255,255,0.75)';
+            controlUI.style.border = '2px solid #fff';
+            controlUI.style.borderRadius = '6px';
+            controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+            controlUI.style.cursor = 'pointer';
+            controlUI.style.marginBottom = '22px';
+            controlUI.style.textAlign = 'center';
+            controlUI.title = 'search for musuem objects';
+            controlDiv.appendChild(controlUI);
+            // Set CSS for the control interior.
+            var controlText = document.createElement('div');
+            controlText.style.color = 'rgb(25,25,25)';
+            controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+            controlText.style.fontSize = '14px';
+            controlText.style.lineHeight = '38px';
+            controlText.style.paddingLeft = '5px';
+            controlText.style.paddingRight = '5px';
+            controlText.innerHTML = 'Search Here';
+            controlUI.appendChild(controlText);
+
+            // Setup the click event listener
+            controlUI.addEventListener('click', function() {
+              mapHelpers.searchHere(mapsModel.googleMap.getCenter());
+            });
+          }
         }
       };
-
-      // NOTE CenterControl code from
-      // example https://developers.google.com/maps/documentation/javascript/examples/control-custom
-      function CenterControl(controlDiv, map) {
-        // Set CSS for the control border.
-        var controlUI = document.createElement('div');
-        controlUI.style.backgroundColor = 'rgba(255,255,255,0.75)';
-        controlUI.style.border = '2px solid #fff';
-        controlUI.style.borderRadius = '6px';
-        controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-        controlUI.style.cursor = 'pointer';
-        controlUI.style.marginBottom = '22px';
-        controlUI.style.textAlign = 'center';
-        controlUI.title = 'search for musuem objects';
-        controlDiv.appendChild(controlUI);
-        // Set CSS for the control interior.
-        var controlText = document.createElement('div');
-        controlText.style.color = 'rgb(25,25,25)';
-        controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-        controlText.style.fontSize = '14px';
-        controlText.style.lineHeight = '38px';
-        controlText.style.paddingLeft = '5px';
-        controlText.style.paddingRight = '5px';
-        controlText.innerHTML = 'Search Here';
-        controlUI.appendChild(controlText);
-        // Setup the click event listeners: simply set the map to Chicago.
-        controlUI.addEventListener('click', function() {
-          mapHelpers.searchHere(mapsModel.googleMap.getCenter());
-        });
-      }
 
       // custom knockout binding handler for address autocomplete
       // code modified from example in 'KnockoutJS by Example' by Adan Jaswal ISBN: 9781785288548
@@ -774,48 +765,165 @@ var MusuemApp = (function() {
         },
 
         update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          var value = valueAccessor();
-          var valueUnwrapped = ko.unwrap(value);
-          console.log('autocomplete is:' + valueUnwrapped);
+          console.log('autocomplete is:' + ko.unwrap(valueAccessor()));
         }
       };
+      /////////////////////////////////////////////////////////////////////
+      // MAP WORDS functions
+      // Simple animated example of d3-cloud
+      // code modified from http://bl.ocks.org/jwhitfieldseed/9697914
+      /////////////////////////////////////////////////////////////////////
+      var mapWords = function() {
+        var noMusuemData = [
+          ['no data', 1]
+        ];
+        if (MusuemApp.musuemData !== []) {
+          if (MusuemApp.musuemData.data) {
+            // TODO
+            var arr = wordMapList(MusuemApp.musuemData.data.place[0].musuemData);
+            var placeNames = [];
+            for (var i = 0; i < arr.length; i++) {
+              placeNames.push(arr[i]);
+            }
+            return placeNames;
+          }
+        }
+        return noMusuemData;
+      };
 
+      function wordCloud(selector) {
+        var fill = d3.scale.category20();
 
-      // var mapWords = function() {
-      //   var noMusuemData = [
-      //     ['no data', 1]
-      //   ];
-      //   // if (MusuemApp.musuemData !== []) {
-      //   //   if (typeof(MusuemApp.musuemData == 'array')) {
-      //   //     return wordMapList(MusuemApp.musuemData[0]);
-      //   //   }
-      //   // }
-      //   return noMusuemData;
-      // };
-      //
-      // var WordCloudOptions = {
-      //   list: mapWords(),
-      //   gridSize: 1,
-      //   weightFactor: 1,
-      //   fontFamily: 'Times, serif',
-      //   color: null,
-      //   rotateRatio: 0.4,
-      //   backgroundColor: '#ffe0e0',
-      //   hover: window.drawBox,
-      // };
-      //
-      // // custom binding handler for WORDMAP div
-      // ko.bindingHandlers.wordCloud = {
-      //   init: function(element, valueAccessor) {
-      //     this.numClicks = ko.observable(0);
-      //     // set click function for words and create wordCount object
-      //     WordCloudOptions.click = function(item, dimension, event) {
-      //       var name = item[0];
-      //       var count = item[1];
-      //     };
-      //     WordCloud(element, WordCloudOptions);
-      //   }
-      // };
+        //Construct the word cloud's SVG element
+        var svg = d3.select(selector).append("svg")
+          .attr("width", 300)
+          .attr("height", 300)
+          .append("g")
+          .attr("transform", "translate(150,150)");
+
+        //Draw the word cloud
+        function draw(words) {
+          var cloud = svg.selectAll("g text")
+            .data(words, function(d) {
+              return d.text;
+            });
+
+          //Entering words
+          cloud.enter()
+            .append("text")
+            .style("font-family", "Serif")
+            .style("fill", function(d, i) {
+              return fill(i);
+            })
+            .attr("text-anchor", "middle")
+            .attr('font-size', 1)
+            .text(function(d) {
+              return d.text;
+            });
+
+          //Entering and existing words
+          cloud.transition()
+            .duration(600)
+            .style("font-size", function(d) {
+              return d.size + "px";
+            })
+            .attr("transform", function(d) {
+              return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+            })
+            .style("fill-opacity", 1)
+            .each(function() {
+              // click handler for words on wordCloud
+              d3.select(this).on("click", function(d) {
+                // TODO
+                console.dir(d);
+              });
+            });
+
+          //Exiting words
+          cloud.exit()
+            .transition()
+            .duration(200)
+            .style('fill-opacity', 1e-6)
+            .attr('font-size', 1)
+            .remove();
+        }
+        //Use the module pattern to encapsulate the visualisation code. We'll
+        // expose only the parts that need to be public.
+        return {
+          //Recompute the word cloud for a new set of words. This method will
+          // asynchronously call draw when the layout has been computed.
+          //The outside world will need to call this function, so make it part
+          // of the wordCloud return value.
+          update: function(words) {
+            d3.layout.cloud().size([300, 300])
+              .words(words)
+              .padding(3)
+              .rotate(function() {
+                return ~~(Math.random() * 2) * 90;
+              })
+              .font("Serif")
+              .fontSize(function(d) {
+                return d.size;
+              })
+              .on("end", draw)
+              .start();
+          }
+        };
+      }
+      //Some sample data - http://en.wikiquote.org/wiki/Opening_lines
+      var words = [
+        "You don't know about me without you have read a book called The Adventures of Tom Sawyer but that ain't no matter.",
+        "The boy with fair hair lowered himself down the last few feet of rock and began to pick his way toward the lagoon.",
+        "When Mr. Bilbo Baggins of Bag End announced that he would shortly be celebrating his eleventy-first birthday with a party of special magnificence, there was much talk and excitement in Hobbiton.",
+        "It was inevitable: the scent of bitter almonds always reminded him of the fate of unrequited love."
+      ];
+
+      //Prepare one of the sample sentences by removing punctuation,
+      // creating an array of words and computing a random size attribute.
+      function getWords(i) {
+        return words[i]
+          .replace(/[!\.,:;\?]/g, '')
+          .split(' ')
+          .map(function(d) {
+            return {
+              text: d,
+              size: 12 + Math.random() * 40
+            };
+          });
+      }
+
+      //This method tells the word cloud to redraw with a new set of words.
+      //In reality the new words would probably come from a server request,
+      // user input or some other source.
+      function showNewWords(vis, i) {
+        i = i || 10;
+        vis.update(getWords(i++ % words.length));
+        setTimeout(function() {
+          showNewWords(vis, i + 20);
+        }, 20000);
+      }
+      /////////////////////////////////////////////////////////////////////
+
+      ko.bindingHandlers.wordCloud = {
+
+        cat: [{text: 'pop', size: 45},{text: 'dop', size: 35}],
+
+        init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+          var wordCloudOptions = { words: [{text: 'oi', size: 45}]};
+          // create a new word cloud and bind to 'wordCloud'
+          this.wordCloud = wordCloud(element);
+
+        },
+
+        update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+          var value = ko.utils.unwrapObservable(valueAccessor()); //unwrap to get subscription
+          console.log('Values: ' + value);
+          //showNewWords(this.wordCloud);
+          var words = ko.unwrap(allBindingsAccessor().cat);
+          console.log(words);
+          showNewWords(this.wordCloud);
+        }
+      };
     };
 
     // method to subscribe to observerable changes
@@ -853,7 +961,7 @@ var MusuemApp = (function() {
       for (var i = 0; i < data.records.length; i++) {
         var fields = data.records[i].fields,
           name = fields.name,
-          count = fields.musuemobject_count;
+          count = fields.museumobject_count;
         if (count !== 0) {
           // only use places that have some musuemObjects
           var item = [];
@@ -864,6 +972,7 @@ var MusuemApp = (function() {
         }
       }
       console.log('wordMap ' + list.length + ' items of ' + totalCount);
+      console.dir(list);
       return list;
     }
 
@@ -942,5 +1051,8 @@ $(function() {
   setTimeout(function() {
     makeMapMusuemData();
   }, 1000); // wait 1 second before running makeMapMusuemData()
+
+
+
 });
 //---------------------------------------------------------
