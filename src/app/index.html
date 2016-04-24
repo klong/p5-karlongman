@@ -41,21 +41,10 @@
       <!-- map markers list -->
       <div id="places" class="ui segments" data-bind="foreach: mapsModel.obsArrayMapMarkers">
         <!-- map marker list item -->
-        <div class="ui segment" data-bind="text: bestPlace.formatted_address + ' ' + prefPlaceMarker.visible, visible: showMarker, click: MusuemApp.MusuemViewModel.vm.mapHelpers.panMapToPlace(bestPlace)"></div>
+        <div class="ui segment" data-bind="text: bestPlace.formatted_address + ' ' + prefPlaceMarker.visible, visible: obsShowMarker, click: $parent.mapHelpers.panMapToMusuemPlaceMarker($data)"></div>
       </div>
     </div>
     <!-- PLACES LIST END -->
-
-    <!-- WORD CLOUD START -->
-    <div class="centered ui three column stackable grid ">
-      <div class="column">
-        <div id="wordCloudArea" class="wordCloud" data-bind="wordCloud: {cat:'pop'}"></div>
-      </div>
-      <div class="column">
-        <div id="wordCloudArea2" class="wordCloud" data-bind="wordCloud:"></div>
-      </div>
-  </div>
-    <!-- WORD CLOUD END -->
 
     <!-- DEBUG LIST START -->
     <div class="">

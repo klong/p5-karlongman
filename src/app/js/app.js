@@ -29,13 +29,6 @@ var MusuemApp = (function() {
     url: 'https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js',
     isLoaded: 'no',
     test: "ko"
-  }, {
-    // wordcloud2 api
-    name: 'wordcloud2',
-    dataType: 'script',
-    url: '/js/library/wordcloud2.js',
-    isLoaded: 'no',
-    test: "wordcloud2"
   }];
   //-------------------------------------------------------------------------
   // initMusuemPlaces defines the search locations for default musuemMarkers
@@ -44,20 +37,20 @@ var MusuemApp = (function() {
   var initMusuemPlaces = [{
     name: "City of Bristol, UK",
     location: {
-      lat: 51.4658439,
-      lng: -2.572136300000011
+      lat: 51.454513,
+      lng: -2.5879099999999653
     }
   }, {
     name: "Liverpool, Merseyside, UK",
     location: {
-      lat: 53.37669649999999,
-      lng: -2.914901900000018
+      lat: 53.4083714,
+      lng: -2.9915726000000404
     }
   }, {
-    name: "London Borough of Camden, Greater London, UK",
+    name: "London, UK",
     location: {
-      lat: 51.55170589999999,
-      lng: -0.15882550000003448
+      lat: 51.5073509,
+      lng: -0.12775829999998223
     }
   }];
 
@@ -237,10 +230,6 @@ var MusuemApp = (function() {
       //  KnockoutJS observable & observableArray variables
       //-----------------------------------------------------
       obsArrayMapMarkers: ko.observableArray([]), // array to store all map marker objects
-      obsArrayWordsMapList: ko.observableArray([{
-        text: "default",
-        size: 60
-      }]),
       obsSelectedPlace: ko.observable(false),
       // obsUserLocalPlace is used to allow a button to set map to the browser geolocation
       // if service not allowed then button is not visible
@@ -301,7 +290,8 @@ var MusuemApp = (function() {
           modelCollection: 'place',
           dataType: 'json',
           search_parameters: {
-            q: preferedPlace.address_components[0].short_name,
+            latitude: preferedPlace.geometry.location.lat,
+            longitude: preferedPlace.geometry.location.lng,
             orderby: "distance", // order results by closest distance to search loc
             radius: 10, // radius in km to restrict search results
             limit: 45, // note: 45 is max amount of musuem objects results allowed on a single AJAX call by API
@@ -387,10 +377,10 @@ var MusuemApp = (function() {
         for (var i = 0; i < musuemMarkers.length; i++) { // loop through Markers Collection
           var musMarkerObj = musuemMarkers[i];
           if (bounds.contains(musMarkerObj.prefPlaceMarker.position)) {
-            musMarkerObj.showMarker(true);
+            musMarkerObj.obsShowMarker(true);
             //console.dir(musMarkerObj);
           } else {
-            musMarkerObj.showMarker(false);
+            musMarkerObj.obsShowMarker(false);
           }
         }
       };
@@ -418,11 +408,11 @@ var MusuemApp = (function() {
       }
 
       var showAllMarkers = function() {
-        var bounds = new google.maps.LatLngBounds();
-        for (var i = 0; i < mapsModel.obsArrayMapMarkers.length; i++) {
-          var musMarker = mapsModel.obsArrayMapMarkers[i];
-          console.dir(musMarker);
-          musMarker.showMarker(true);
+        var bounds = new google.maps.LatLngBounds(); // empty new bounds for zooming map
+        var musuemMapMarkerArray = mapsModel.obsArrayMapMarkers();
+        for (var i = 0; i < musuemMapMarkerArray.length; i++) {
+          var musMarker = musuemMapMarkerArray[i];
+          musMarker.obsShowMarker(true);
           bounds.extend(musMarker.prefPlaceMarker.getPosition());
         }
         mapsModel.googleMap.fitBounds(bounds);
@@ -444,15 +434,27 @@ var MusuemApp = (function() {
 
       };
 
+      var togglePlaceMarkerBounce = function(placeMarkerObj) {
+        var markerObj = placeMarkerObj.prefPlaceMarker;
+        if (markerObj.getAnimation() !== null) {
+          markerObj.setAnimation(null);
+        } else {
+          markerObj.setAnimation(google.maps.Animation.BOUNCE);
+          setTimeout(function() {
+            markerObj.setAnimation(null);
+          }, 1400); // a bit of a kludge
+        }
+      };
+
       var searchUsersLocation = function() {
-        var geoPos = ko.utils.unwrapObservable(mapsModel.obsUserLocalPlace);
-        if (geoPos) {
+        var geoPosObj = ko.utils.unwrapObservable(mapsModel.obsUserLocalPlace);
+        if (geoPosObj) {
           var latLng = {
-            lat: geoPos.geoPosition.coords.latitude,
-            lng: geoPos.geoPosition.coords.longitude
+            lat: geoPosObj.geoPosition.coords.latitude,
+            lng: geoPosObj.geoPosition.coords.longitude
           };
-          // pan map to user loction
-          panMapToLocation(latLng);
+          // add musuem marker at pref place closest to users geoloction
+          searchHere(latLng);
         }
       };
 
@@ -462,10 +464,10 @@ var MusuemApp = (function() {
         google.maps.event.trigger(map, 'resize');
       };
 
-      var panMapToPlace = function(place) {
-        map.panTo(place.geometry.location);
-        map.fitBounds(place.geometry.viewport);
-        google.maps.event.trigger(map, 'resize');
+      var panMapToMusuemPlaceMarker = function(musuemPlaceMarker) {
+        var bestPlace = musuemPlaceMarker.bestPlace;
+        map.panTo(bestPlace.geometry.location);
+        map.fitBounds(bestPlace.geometry.viewport);
       };
 
       // center map on location
@@ -483,12 +485,25 @@ var MusuemApp = (function() {
           position: bestPlace.geometry.location,
           map: map,
           icon: mapHelpers.pinMaker("yellow"),
-          id: bestPlace.place_id, // a unique google map placeID used as key for localStorage
-          visible: true // hide marker on map by deafult
+          id: bestPlace.place_id, // a unique google map placeID reference to bestPlace
+          visible: false,
+          animation: google.maps.Animation.DROP
         });
-        // make musuemMarker object
+
+        // musuemMarker object
+        this.ObsIsVisible = ko.observable(false);
+        this.ObsIsVisible.subscribe(function(currentState) {
+          if (currentState) {
+            marker.setVisible(true);
+          } else {
+            marker.setVisible(false);
+          }
+        });
+        // show marker by default
+        this.ObsIsVisible(false);
+
         var musuemMarker = {
-          showMarker: ko.observable(true), // observable used to hide/show a places marker & list item
+          obsShowMarker: this.ObsIsVisible, // observable used to hide/show from map
           prefPlaceMarker: marker,
           bestPlace: bestPlace
         };
@@ -514,13 +529,15 @@ var MusuemApp = (function() {
         var contentString = '';
         contentString += '<div id="content">';
         contentString += '<h4>' + musuemMarker.bestPlace.formatted_address + '</h4>';
+        contentString += '<p>' + '' + musuemMarker.bestPlace.place_id + '</p>';
+        contentString += '<p>lat:' + musuemMarker.bestPlace.geometry.location.lat + ' lng:' + musuemMarker.bestPlace.geometry.location.lng + '</p>';
         contentString += '</div>';
         return contentString;
       };
       //------------------------------------------------------------------------
       function searchHere(location) {
         var map = mapsModel.googleMap;
-        // use exisiting geocoder to find a 'preferred place'
+        // use geocoder to find 'preferred place'
         mapsModel.geocoder.geocode({
           'location': location,
           'bounds': map.bounds // bias search results to the visible area of map
@@ -545,41 +562,45 @@ var MusuemApp = (function() {
               // use prefered type of addresses if possible as more general place
               // name better for the app usage
               var bestPlaceResults = $.grep(results, peferedPlaceP);
-              var bestPlace = false; // declare local var
+              var bestPlace = false;
               if (bestPlaceResults.length > 0) {
-                // use first array item of bestPlaceResults
+                // use the first array item of bestPlaceResults
                 bestPlace = bestPlaceResults[0];
               } else {
-                // there are no preferred address so use the first address
-                // in the original geocode results (usually will be a 'rooftop' type place)
+                // there are no preferred address
                 console.log('no peferedPlaceP address');
-                bestPlace = results[0];
+                bestPlace = results[0]; // use the first address in original geocode results
+                // usually will be a 'rooftop' type place
               }
-              if (bestPlace) {
-                // check if preferred marker already exists for preferred place
-                if (mapMarkerExistsRef(bestPlace) !== false) {
-                  console.log('marker already exits for ' + bestPlace.formatted_address);
-                } else {
-                  // create a new musuem map marker
-                  makeMusuemMarker(bestPlace);
-                  // populate the musuemData with places with musuemObjects
-                  musuemDataHelpers.getMusuemPlaces(bestPlace);
-                }
+              // check if preferred marker already exists for preferred place
+              var markerforPlace = mapMarkerExistsRef(bestPlace);
+              if (markerforPlace !== false) {
+                panMapToMusuemPlaceMarker(markerforPlace);
+                togglePlaceMarkerBounce(markerforPlace);
+                console.log('marker already exits for ' + bestPlace.formatted_address);
+              } else {
+                // create a new musuem map marker
+                makeMusuemMarker(bestPlace);
+                // populate the musuemData with places with musuemObjects
+                musuemDataHelpers.getMusuemPlaces(bestPlace);
               }
             } else {
               console.log('no geocode results found');
               return false;
             }
+          } else {
+            console.log('Gocoder Error: ' + status);
+            return false;
           }
         });
       }
 
-      function mapMarkerExistsRef(place) {
-        var markerArray = mapsModel.obsArrayMapMarkers;
-        for (var i = 0; i < markerArray.length; i++) {
-          var markerObj = markerArray[i].prefPlaceMarker;
-          if (markerObj.id === place.place_id) {
-            return i;
+      function mapMarkerExistsRef(newBestPlace) {
+        var markerArray = mapsModel.obsArrayMapMarkers();
+        // check if new best place google ID is within an existing marker
+        for (var count = 0; count < markerArray.length; count++) {
+          if (markerArray[count].bestPlace.place_id == newBestPlace.place_id) {
+            return markerArray[count];
           }
         }
         return false;
@@ -597,7 +618,7 @@ var MusuemApp = (function() {
         rebuildAllMarkers: rebuildAllMarkers,
         rebuildMarker: rebuildMarker,
         searchUsersLocation: searchUsersLocation,
-        panMapToPlace: panMapToPlace,
+        panMapToMusuemPlaceMarker: panMapToMusuemPlaceMarker,
         mapMarkerExistsRef: mapMarkerExistsRef,
         filterMarkersToViewport: filterMarkersToViewport
       };
@@ -655,6 +676,10 @@ var MusuemApp = (function() {
             scaleControl: true,
             mapTypeId: google.maps.MapTypeId.TERRAIN,
             center: new google.maps.LatLng(51.478771, -0.011074),
+            mapTypeControlOptions: {
+              style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+              position: google.maps.ControlPosition.TOP_RIGHT
+            },
             zoom: 1 // the whole world map show by default
           });
           mapsModel.googleMap = map; // debug helper
@@ -721,23 +746,6 @@ var MusuemApp = (function() {
       // code modified from example in 'KnockoutJS by Example' by Adan Jaswal ISBN: 9781785288548
       ko.bindingHandlers.addressAutoComplete = {
         init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          ////////////////////////////////////////////////////
-          // var serviceOptions = {
-          //   input: 'chester, uk',
-          //   types: ['geocode']
-          // };
-          // var autocompletePlaceService = new google.maps.places.AutocompleteService();
-          //
-          // var displaySuggestions = function(predictions, status) {
-          //   if (status != google.maps.places.PlacesServiceStatus.OK) {
-          //     alert(status);
-          //     return;
-          //   }
-          //   var LabelText = (predictions[0].description);
-          //   console.log('first prediction for autoplace ' + LabelText);
-          // };
-          // autocompletePlaceService.getQueryPredictions(serviceOptions, displaySuggestions);
-          ////////////////////////////////////////////////////
 
           // create the autocomplete object
           var options = {
@@ -756,7 +764,7 @@ var MusuemApp = (function() {
                 // exit handler
                 return;
               } else {
-                mapHelpers.panMapToPlace(place);
+                // mapHelpers.panMapToMusuemPlaceMarker(place);
               }
             } else {
               console.log("Autocomplete's returned place contains no address_components");
@@ -768,164 +776,7 @@ var MusuemApp = (function() {
           console.log('autocomplete is:' + ko.unwrap(valueAccessor()));
         }
       };
-      /////////////////////////////////////////////////////////////////////
-      // MAP WORDS functions
-      // Simple animated example of d3-cloud
-      // code modified from http://bl.ocks.org/jwhitfieldseed/9697914
-      /////////////////////////////////////////////////////////////////////
-      var mapWords = function() {
-        var noMusuemData = [
-          ['no data', 1]
-        ];
-        if (MusuemApp.musuemData !== []) {
-          if (MusuemApp.musuemData.data) {
-            // TODO
-            var arr = wordMapList(MusuemApp.musuemData.data.place[0].musuemData);
-            var placeNames = [];
-            for (var i = 0; i < arr.length; i++) {
-              placeNames.push(arr[i]);
-            }
-            return placeNames;
-          }
-        }
-        return noMusuemData;
-      };
-
-      function wordCloud(selector) {
-        var fill = d3.scale.category20();
-
-        //Construct the word cloud's SVG element
-        var svg = d3.select(selector).append("svg")
-          .attr("width", 300)
-          .attr("height", 300)
-          .append("g")
-          .attr("transform", "translate(150,150)");
-
-        //Draw the word cloud
-        function draw(words) {
-          var cloud = svg.selectAll("g text")
-            .data(words, function(d) {
-              return d.text;
-            });
-
-          //Entering words
-          cloud.enter()
-            .append("text")
-            .style("font-family", "Serif")
-            .style("fill", function(d, i) {
-              return fill(i);
-            })
-            .attr("text-anchor", "middle")
-            .attr('font-size', 1)
-            .text(function(d) {
-              return d.text;
-            });
-
-          //Entering and existing words
-          cloud.transition()
-            .duration(600)
-            .style("font-size", function(d) {
-              return d.size + "px";
-            })
-            .attr("transform", function(d) {
-              return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-            })
-            .style("fill-opacity", 1)
-            .each(function() {
-              // click handler for words on wordCloud
-              d3.select(this).on("click", function(d) {
-                // TODO
-                console.dir(d);
-              });
-            });
-
-          //Exiting words
-          cloud.exit()
-            .transition()
-            .duration(200)
-            .style('fill-opacity', 1e-6)
-            .attr('font-size', 1)
-            .remove();
-        }
-        //Use the module pattern to encapsulate the visualisation code. We'll
-        // expose only the parts that need to be public.
-        return {
-          //Recompute the word cloud for a new set of words. This method will
-          // asynchronously call draw when the layout has been computed.
-          //The outside world will need to call this function, so make it part
-          // of the wordCloud return value.
-          update: function(words) {
-            d3.layout.cloud().size([300, 300])
-              .words(words)
-              .padding(3)
-              .rotate(function() {
-                return ~~(Math.random() * 2) * 90;
-              })
-              .font("Serif")
-              .fontSize(function(d) {
-                return d.size;
-              })
-              .on("end", draw)
-              .start();
-          }
-        };
-      }
-      //Some sample data - http://en.wikiquote.org/wiki/Opening_lines
-      var words = [
-        "You don't know about me without you have read a book called The Adventures of Tom Sawyer but that ain't no matter.",
-        "The boy with fair hair lowered himself down the last few feet of rock and began to pick his way toward the lagoon.",
-        "When Mr. Bilbo Baggins of Bag End announced that he would shortly be celebrating his eleventy-first birthday with a party of special magnificence, there was much talk and excitement in Hobbiton.",
-        "It was inevitable: the scent of bitter almonds always reminded him of the fate of unrequited love."
-      ];
-
-      //Prepare one of the sample sentences by removing punctuation,
-      // creating an array of words and computing a random size attribute.
-      function getWords(i) {
-        return words[i]
-          .replace(/[!\.,:;\?]/g, '')
-          .split(' ')
-          .map(function(d) {
-            return {
-              text: d,
-              size: 12 + Math.random() * 40
-            };
-          });
-      }
-
-      //This method tells the word cloud to redraw with a new set of words.
-      //In reality the new words would probably come from a server request,
-      // user input or some other source.
-      function showNewWords(vis, i) {
-        i = i || 10;
-        vis.update(getWords(i++ % words.length));
-        setTimeout(function() {
-          showNewWords(vis, i + 20);
-        }, 20000);
-      }
-      /////////////////////////////////////////////////////////////////////
-
-      ko.bindingHandlers.wordCloud = {
-
-        cat: [{text: 'pop', size: 45},{text: 'dop', size: 35}],
-
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          var wordCloudOptions = { words: [{text: 'oi', size: 45}]};
-          // create a new word cloud and bind to 'wordCloud'
-          this.wordCloud = wordCloud(element);
-
-        },
-
-        update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          var value = ko.utils.unwrapObservable(valueAccessor()); //unwrap to get subscription
-          console.log('Values: ' + value);
-          //showNewWords(this.wordCloud);
-          var words = ko.unwrap(allBindingsAccessor().cat);
-          console.log(words);
-          showNewWords(this.wordCloud);
-        }
-      };
     };
-
     // method to subscribe to observerable changes
     var koSubscribers = function() {
       // for event AFTER obsUserLocalPlace has changed
@@ -953,27 +804,6 @@ var MusuemApp = (function() {
         console.log(' :- lng:' + musObj.fields.longitude + ' lat:' + musObj.fields.latitude);
         console.log(' ' + musObj.fields.type + ' ' + musObj.fields.musuemobject_count + ' musuem objects');
       }
-    }
-
-    function wordMapList(data) {
-      var totalCount = data.records.length;
-      var list = [];
-      for (var i = 0; i < data.records.length; i++) {
-        var fields = data.records[i].fields,
-          name = fields.name,
-          count = fields.museumobject_count;
-        if (count !== 0) {
-          // only use places that have some musuemObjects
-          var item = [];
-          item.push(name);
-          item.push(count);
-          // push item onto list
-          list.push(item);
-        }
-      }
-      console.log('wordMap ' + list.length + ' items of ' + totalCount);
-      console.dir(list);
-      return list;
     }
 
     //-----------------------------------------------------
