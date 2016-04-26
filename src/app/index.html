@@ -17,42 +17,54 @@
 </head>
 
 <body>
-  <!-- CONTENT START-->
-  <div class="ui container">
-    <div class="ui stackable conatiner menu">
-      <form data-bind="submit: mapHelpers.searchHere, update: mapsModel.placeName">
-        <label data-bind="text: mapsModel.compSelectedPlace"></label>
-          <input id="autocompleteLocation" type="text" class="ui input" data-bind="addressAutoComplete:">
-          <button id="btn_golocal" class="ui right floated primary button" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
-      </form>
-    </div>
-
-    <div class="">
-      <button id="btn_goAll" class="ui basic button" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">show all</button>
+  <!-- MUSEUM APP CONTENT - START -->
+  <div class="grid container">
+    <div class="ui container">
+      <img class="ui tiny image" src="img/event_main_placeholder.png" alt="Victoria and Albert Museum logo">
     </div>
     <!-- MAP AREA START -->
-    <div class="map-container">
+    <div class="ui container map-container">
       <div class="map-view" id="map" data-bind="mapPanel"></div>
     </div>
     <!-- MAP AREA END -->
-
+    <!-- APP CONTROLS START -->
+    <div class="ui three column doubling grid container">
+      <div class="column">
+          <button class="ui small primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">show all</button>
+          <!-- <div class="ui small icon input">
+        <input id="autocompleteLocation" type="text" data-bind="addressAutoComplete:"></div> -->
+      </div>
+      <div class="column">
+          <div class="ui category search">
+            <div class="ui icon input">
+              <input type="text" placeholder="Filter...">
+            </div>
+            <div class="results"></div>
+          </div>
+      </div>
+      <div class="column">
+          <button class="ui small secondary button floated right" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
+      </div>
+    </div>
+    <!-- APP CONTROLS END -->
     <!-- PLACES LIST START -->
-    <div class="results">
+    <div class="ui container results">
+      <div class="ui label" data-bind="text: mapsModel.compNumOfPlacesShowing"></div>
       <!-- map markers list -->
-      <div id="places" class="ui segments" data-bind="foreach: mapsModel.obsArrayMapMarkers">
+      <div id="places" class="ui segments" data-bind="foreach: { data: mapsModel.compSortedMapMarkers, as: 'mapMarker' }">
         <!-- map marker list item -->
-        <div class="ui segment" data-bind="text: bestPlace.formatted_address + ' ' + prefPlaceMarker.visible, visible: obsShowMarker, click: $parent.mapHelpers.panMapToMusuemPlaceMarker($data)"></div>
+        <div class="ui segment" data-bind="text: bestPlace.formatted_address + ' ' + prefPlaceMarker.visible, visible: obsShowMarker, click: $parent.mapHelpers.panMapToMuseumMarker($data)"></div>
       </div>
     </div>
     <!-- PLACES LIST END -->
-
+    <!-- MUSEUM APP CONTENT - END -->
     <!-- DEBUG LIST START -->
-    <div class="">
+    <div class="debugMessageArea" data-bind="visible: museumApp.debugMessageArea">
       <div class="">
         <label data-bind="fadeInText: mapsModel.placeName"></label>
       </div>
       <div class="">
-        <label data-bind="text: 'dataReady ' + MusuemApp.musuemDataReady.status"></label>
+        <label data-bind="text: 'dataReady ' + museumApp.museumDataReady.status"></label>
       </div>
       <div class="">
         <input data-bind="textInput: mapsModel.placeName " />
@@ -66,13 +78,12 @@
     </div>
   </div>
   <!-- DEBUG LIST END -->
-  <!-- CONTENT END-->
   <!-- ESSENTIAL LIBRARY SCRIPTS -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <!-- APP SCRIPTS -->
   <script src="js/library/semantic.js"></script>
   <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-   <script src="https://rawgit.com/jasondavies/d3-cloud/master/build/d3.layout.cloud.js"></script>
+  <script src="https://rawgit.com/jasondavies/d3-cloud/master/build/d3.layout.cloud.js"></script>
   <!-- <script src="js/library/d3.layout.cloud.js"></script> -->
   <script src="js/app.js"></script>
 </body>

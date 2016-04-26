@@ -52,6 +52,16 @@ p.weight3 {
   height: 100%;
   width: 100%;
 }
+
+.info-window-content {
+  height: 150px;
+  width: 300px;
+}
+
+/*.gm-style-iw {
+  height: 150px;
+  width: 500px;
+}*/
 /*#map {
   height: 500px;
   width: 100%;
