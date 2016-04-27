@@ -11,6 +11,21 @@ body {
   font-style: normal;
   font-weight: 400;
 }
+.place-labels {
+  color: salmon;
+  background-color: white;
+  font-family: "Noticia Text", "Arial", sans-serif;
+  font-size: 12px;
+  /*font-weight: bold;*/
+  text-align: center;
+  white-space: nowrap;
+  padding-left: 4px;
+  padding-right: 4px;
+  border: 2px;
+  border-style: solid;
+  border-radius: 6px;
+  box-shadow: 2px 3px 3px rgba(0,0,0,0.3);
+}
 p.weight1 {
   font-family: "Noticia Text";
   font-weight: 400;
@@ -36,15 +51,13 @@ p.weight3 {
   margin-right: 20px;
   margin-top: 20px;
 }
-
-.something{
+.something {
   background-color: snow;
   height: 200px;
 }
-
 .map-view {
-  visibility:hidden;
-  height:100%;
+  visibility: hidden;
+  height: 100%;
   width: 100%;
   /*position: absolute;*/
 }
@@ -52,7 +65,6 @@ p.weight3 {
   height: 100%;
   width: 100%;
 }
-
 .info-window-content {
   height: 150px;
   width: 300px;
@@ -62,11 +74,14 @@ p.weight3 {
   height: 150px;
   width: 500px;
 }*/
+
+
 /*#map {
   height: 500px;
   width: 100%;
   margin: 10px;
 }*/
+
 #autocompleteLocation {
   background-color: #fff;
   font-family: Roboto;
@@ -77,7 +92,6 @@ p.weight3 {
   text-overflow: ellipsis;
   width: 300px;
 }
-
 .controls {
   margin-top: 8px;
   border: 1px solid transparent;
@@ -88,32 +102,26 @@ p.weight3 {
   outline: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
-
 #btn_golocal {
   /*vertical-align: top;
   float: right;*/
 }
-
 .wordCloud {
   list-style: none;
   height: 300px;
   width: 100%;
 }
-
 .resultsArea {
   background-color: snow;
   text-align: left;
   padding-left: 16px;
 }
-
 .message {
   padding: 10px;
 }
-
 .places-list-item {
-    list-style: none;
+  list-style: none;
 }
-
 .list-area-h2 {
   font-size: 1.3em;
 }

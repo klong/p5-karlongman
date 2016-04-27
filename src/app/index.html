@@ -30,20 +30,20 @@
     <!-- APP CONTROLS START -->
     <div class="ui three column doubling grid container">
       <div class="column">
-          <button class="ui small primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">show all</button>
-          <!-- <div class="ui small icon input">
+        <button class="ui small primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">show all</button>
+        <!-- <div class="ui small icon input">
         <input id="autocompleteLocation" type="text" data-bind="addressAutoComplete:"></div> -->
       </div>
       <div class="column">
-          <div class="ui category search">
-            <div class="ui icon input">
-              <input type="text" placeholder="Filter...">
-            </div>
-            <div class="results"></div>
+        <div class="ui category search">
+          <div class="ui icon input">
+            <input type="text" placeholder="Filter...">
           </div>
+          <div class="results"></div>
+        </div>
       </div>
       <div class="column">
-          <button class="ui small secondary button floated right" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
+        <button class="ui small secondary button floated right" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
       </div>
     </div>
     <!-- APP CONTROLS END -->
@@ -51,9 +51,12 @@
     <div class="ui container results">
       <div class="ui label" data-bind="text: mapsModel.compNumOfPlacesShowing"></div>
       <!-- map markers list -->
-      <div id="places" class="ui segments" data-bind="foreach: { data: mapsModel.compSortedMapMarkers, as: 'mapMarker' }">
-        <!-- map marker list item -->
-        <div class="ui segment" data-bind="text: bestPlace.formatted_address + ' ' + prefPlaceMarker.visible, visible: obsShowMarker, click: $parent.mapHelpers.panMapToMuseumMarker($data)"></div>
+      <div class="ui fluid styled accordion" id="mapMarkerList">
+        <div id="places" class="ui segment" data-bind="foreach: { data: mapsModel.compSortedMapMarkers, as: 'mapMarker' }">
+          <!-- map marker list item -->
+          <div class="title" data-bind="text: bestPlace.formatted_address, visible: obsShowMarker, click: $parent.mapHelpers.markerListClick($data)"></div>
+          <div class="content" data-bind="uiiu"></div>
+        </div>
       </div>
     </div>
     <!-- PLACES LIST END -->
