@@ -54,8 +54,8 @@
       <div class="ui fluid styled accordion" id="mapMarkerList">
         <div id="places" class="ui segment" data-bind="foreach: { data: mapsModel.compSortedMapMarkers, as: 'mapMarker' }">
           <!-- map marker list item -->
-          <div class="title" data-bind="text: bestPlace.formatted_address, visible: obsShowMarker, click: $parent.mapHelpers.markerListClick($data)"></div>
-          <div class="content" data-bind="uiiu"></div>
+          <div class="title" data-bind="text: bestPlace.formatted_address, visible: obsShowMarker"></div>
+          <div class="content" data-bind=""></div>
         </div>
       </div>
     </div>
