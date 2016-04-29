@@ -52,9 +52,9 @@
       <div class="ui label" data-bind="text: mapsModel.compNumOfPlacesShowing"></div>
       <!-- map markers list -->
       <div class="ui fluid styled accordion" id="mapMarkerList">
-        <div id="places" class="ui segment" data-bind="foreach: { data: mapsModel.compSortedMapMarkers, as: 'mapMarker' }">
+        <div id="places" class="ui" data-bind="foreach: mapsModel.compSortedMapMarkers">
           <!-- map marker list item -->
-          <div class="title" data-bind="text: bestPlace.formatted_address, visible: obsShowMarker"></div>
+          <div class="container title" data-bind="text: bestPlace.formatted_address, visible: obsShowMarker, click: $parent.mapHelpers.markerListClick($data)"></div>
           <div class="content" data-bind=""></div>
         </div>
       </div>
