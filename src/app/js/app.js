@@ -30,14 +30,16 @@ var museumApp = (function() {
     url: 'http://google-maps-utility-library-v3.googlecode.com/svn/tags/markerwithlabel/1.1.9/src/markerwithlabel.js',
     isLoaded: 'no',
     test: "MarkerWithLabel"
-  }, {
-    // knockout.js library
-    name: 'knockout',
-    dataType: 'script',
-    url: 'https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js',
-    isLoaded: 'no',
-    test: "ko"
   }];
+
+  // , {
+  //   // knockout.js library
+  //   name: 'knockout',
+  //   dataType: 'script',
+  //   url: 'https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js',
+  //   isLoaded: 'no',
+  //   test: "ko"
+  // }
   //-------------------------------------------------------------------------
   // initmuseumPlaces defines the search locations for default museumMarkers
   //-------------------------------------------------------------------------
@@ -266,8 +268,7 @@ var museumApp = (function() {
     var mapsModel = {
       // a map info window that will be reused to display different museum object details
       infowindow: new google.maps.InfoWindow({
-        content: '',
-        disableAutoPan: true
+        content: ''
       }),
       placeTypeInPrefOrder: ["neighborhood", "political", "locality", "administrative_area_level_4", "administrative_area_level_3", "administrative_area_level_2"],
       //TODO londonTypeInPrefOrder: ["neighborhood", "postal_code"],
@@ -280,6 +281,7 @@ var museumApp = (function() {
       // obsUserLocalPlace is used to allow a button to set map to the browser geolocation
       // if service not allowed then button is not visible
       obsUserLocalPlace: ko.observable(false),
+      obsFilterSearch: ko.observable(''),
       // observable OBSERVABLE ARRAY for museum objects within selected place
       placeName: ko.observable('typograph')
     };
@@ -287,8 +289,51 @@ var museumApp = (function() {
     // add knockout computed variables outside of mapsModel object literal definition
     // as referencing other ko.observables inside mapsModel not possible until defined?
 
+    mapsModel.filterMapList = ko.computed(function() {
+      var filterString = mapsModel.obsFilterSearch();
+      if (filterString === '') {
+        // map markers do not need to be filtered
+        return mapsModel.obsArrayMapMarkers();
+      } else {
+        // filter all exisiting map markers
+        return ko.utils.arrayFilter(mapsModel.obsArrayMapMarkers(), function(markerObj) {
+          var match = markerObj.bestPlace.formatted_address.indexOf(filterString);
+          if (match > 0) {
+            return true;
+          } else {
+            return false;
+          }
+        });
+      }
+    });
+
+    mapsModel.compFilterMarkersToViewport = ko.computed(function() {
+      if (mapsModel.googleMap === undefined) {
+          console.log('bla');
+        return mapsModel.filterMapList();
+
+      } else {
+          console.log('ta');
+        var bounds = mapsModel.googleMap.getBounds();
+        var zoomLimit = (mapsModel.googleMap.zoom > 9) ? true : false;
+        return ko.utils.arrayFilter(mapsModel.filterMapList(), function(markerObj) {
+          if (bounds.contains(markerObj.prefPlaceMarker.position)) {
+            // markerObj.prefPlaceMarker.setMap(mapsModel.googleMap);
+            //markerObj.obsShowMarker(true);
+            markerObj.prefPlaceMarker.labelVisible = zoomLimit;
+            return true;
+          } else {
+            // markerObj.prefPlaceMarker.setMap(null);
+            //markerObj.obsShowMarker(false);
+            markerObj.prefPlaceMarker.labelVisible = zoomLimit;
+            return false;
+          }
+        });
+      }
+    });
+
     mapsModel.compSortedMapMarkers = ko.computed(function() {
-      var data = mapsModel.obsArrayMapMarkers();
+      var data = mapsModel.filterMapList();
       return data.sort(function(left, right) {
         var shortLeftName = left.bestPlace.address_components[0].short_name;
         var shortRightName = right.bestPlace.address_components[0].short_name;
@@ -297,13 +342,7 @@ var museumApp = (function() {
     });
 
     mapsModel.compNumOfPlacesShowing = ko.computed(function() {
-      var mapMarkers = mapsModel.obsArrayMapMarkers();
-      var count = 0;
-      for (var i = 0; i < mapMarkers.length; i++) {
-        if (mapMarkers[i].obsShowMarker()) {
-          count++;
-        }
-      }
+      var count = mapsModel.filterMapList.length;
       if (count === 0) {
         return '';
       } else if (count > 1) {
@@ -312,13 +351,6 @@ var museumApp = (function() {
         return count + ' place';
       }
     });
-
-
-    // mapsModel.compCurrentPlaceId = ko.computed(function() {
-    //   var curSearchPlace = mapsModel.obsSelectedPlace();
-    //   // update mapsModel observable with unique placeID
-    //   return (curSearchPlace === false) ? '' : curSearchPlace.place_id;
-    // });
 
     // END mapsModel
     //---------------------------------------------------------------------------
@@ -341,6 +373,11 @@ var museumApp = (function() {
     //  museumDataHelpers MODULE
     //-----------------------------------------------------
     var museumDataHelpers = function() {
+
+      function clearFilter() {
+        mapsModel.obsFilterSearch('');
+        mapHelpers.showAllMarkers();
+      }
 
       function getMuseumPlaces(museumMarker, preferedPlace, searchRadius) {
         var resourceName = 'V&A collection place name search for museumobjects: ' + preferedPlace.address_components[0].short_name;
@@ -486,7 +523,8 @@ var museumApp = (function() {
       return {
         getMuseumPlaces: getMuseumPlaces,
         getMusuemPlaceObjects: getMusuemPlaceObjects,
-        getmuseumObjectDetails: getmuseumObjectDetails
+        getmuseumObjectDetails: getmuseumObjectDetails,
+        clearFilter: clearFilter
       };
     }(museumDataHelpers);
     //  END museumDataHelpers MODULE
@@ -497,8 +535,11 @@ var museumApp = (function() {
     //-----------------------------------------------------
     var mapHelpers = function() {
 
-      var makeLondonPolygon = function() {
-        var centralLondonTriCoords = [{
+      var obsInfowindowVisible = ko.observable(false);
+
+      var makeLondonPolygons = function() {
+        var londonPolygonArray = [];
+        var LondonAreaTriCoords = [{
           lat: 51.51942532808189,
           lng: -0.391387939453125
         }, {
@@ -529,54 +570,91 @@ var museumApp = (function() {
           lat: 51.47240196119371,
           lng: -0.3714752197265625
         }];
-        var londonPolygon = new google.maps.Polygon({
-          paths: centralLondonTriCoords,
+        var centralLondonTriCoords = [{
+          lat: 51.520493477218274,
+          lng: -0.16736984252929688
+        }, {
+          lat: 51.535872047109315,
+          lng: -0.10969161987304688
+        }, {
+          lat: 51.53864817973768,
+          lng: -0.034503936767578125
+        }, {
+          lat: 51.50307952226442,
+          lng: -0.016651153564453125
+        }, {
+          lat: 51.4973090140083,
+          lng: -0.09304046630859375
+        }, {
+          lat: 51.47122575543907,
+          lng: -0.11707305908203125
+        }, {
+          lat: 51.4608524464555,
+          lng: -0.17526626586914062
+        }, {
+          lat: 51.47218810785753,
+          lng: -0.20788192749023438
+        }, {
+          lat: 51.4973090140083,
+          lng: -0.22212982177734375
+        }, {
+          lat: 51.51739577570338,
+          lng: -0.20341873168945312
+        }];
+        // a google map polygon that roughly defines 'london'
+        var londonArea = new google.maps.Polygon({
+          paths: LondonAreaTriCoords,
           strokeColor: '#FF0000',
           strokeOpacity: 0.1,
           strokeWeight: 2,
           fillColor: '#FF0000',
           fillOpacity: 0.1
         });
-        return londonPolygon;
+        // a google map polygon that roughly defines 'central london'
+        var centralLondon = new google.maps.Polygon({
+          paths: centralLondonTriCoords,
+          strokeColor: 'blue',
+          strokeOpacity: 0.1,
+          strokeWeight: 2,
+          fillColor: 'blue',
+          fillOpacity: 0.1
+        });
+        londonPolygonArray.push({
+          name: 'londonArea',
+          polygon: londonArea
+        });
+        londonPolygonArray.push({
+          name: 'centralLondon',
+          polygon: centralLondon
+        });
+        return londonPolygonArray;
       };
 
       var markerListClick = function(musuemMarker) {
         panMapToMuseumMarker(musuemMarker);
+        openInfoWindow(musuemMarker);
+      };
+
+      var removeMarker = function(musuemMarker) {
+        //console.dir(musuemMarker);
       };
 
       var showAllMarkers = function() {
-        var bounds = new google.maps.LatLngBounds(); // empty new bounds for zooming map
-        var museumMapMarkerArray = mapsModel.obsArrayMapMarkers();
+        mapsModel.infowindow.close();
+        mapHelpers.obsInfowindowVisible(false);
+        var bounds = new google.maps.LatLngBounds();
+        // set map bounds to include all filtered markers
+        var museumMapMarkerArray = mapsModel.filterMapList();
         for (var i = 0; i < museumMapMarkerArray.length; i++) {
           var musMarker = museumMapMarkerArray[i];
-          //musMarker.obsShowMarker(true);
           bounds.extend(musMarker.prefPlaceMarker.getPosition());
         }
-        // make sure infoWindow is closed
-        mapsModel.infowindow.close();
-        // fit map bounds to all markers
+        // fit the map bounds to show all markers
         mapsModel.googleMap.fitBounds(bounds);
         google.maps.event.trigger(map, "resize");
-        // close all accordion content
-        $('#mapMarkerList').accordion('close others');
       };
 
-      var filterMarkersToViewport = function() {
-        var result = [];
-        var bounds = map.getBounds();
-        var showLabel = (map.zoom > 8) ? true : false;
-        var museumMarkers = mapsModel.obsArrayMapMarkers();
-        for (var i = 0; i < museumMarkers.length; i++) { // loop through Markers Collection
-          var musMarkerObj = museumMarkers[i];
-          if (bounds.contains(musMarkerObj.prefPlaceMarker.position)) {
-            musMarkerObj.obsShowMarker(true);
-            musMarkerObj.prefPlaceMarker.labelVisible = showLabel;
-          } else {
-            musMarkerObj.obsShowMarker(false);
-            musMarkerObj.prefPlaceMarker.labelVisible = showLabel;
-          }
-        }
-      };
+
 
       function rebuildMarkersFromMusuemData() {
         var museumDataArray = museumApp.museumData.data.place;
@@ -660,31 +738,42 @@ var museumApp = (function() {
       };
 
       var panMapToMuseumMarker = function(museumMarker) {
+        closeInfoWindow(museumMarker);
         var bestPlace = museumMarker.bestPlace;
         map.panTo(bestPlace.geometry.location);
         map.setZoom(12);
         togglePlaceMarkerBounce(museumMarker);
         google.maps.event.trigger(map, 'resize');
-        showInfoWindow(museumMarker);
       };
 
-      var showInfoWindow = function(musuemMarkerObj) {
+      var closeInfoWindow = function(musuemMarkerObj) {
+        mapsModel.infowindow.close(map, musuemMarkerObj);
+        obsInfowindowVisible(false);
 
+      };
+
+      var openInfoWindow = function(musuemMarkerObj) {
         var mapMarker = musuemMarkerObj.prefPlaceMarker;
         content = infoWindowContents(musuemMarkerObj);
         mapsModel.infowindow.setContent(content);
         // open the infowindow for marker
         mapsModel.infowindow.open(map, mapMarker);
+        obsInfowindowVisible(true);
       };
 
       var updateInfoWindow = function(musuemMarker) {
         var content = mapsModel.infowindow.getContent();
         content = '';
       };
+
       // center map on location
       var centerMap = function(loc) {
         map.setCenter(loc);
         google.maps.event.trigger(map, 'resize');
+      };
+
+      var getMapCenter = function() {
+        return mapsModel.googleMap.getCenter();
       };
 
       //--------------------------------------------------------------------------------
@@ -696,7 +785,6 @@ var museumApp = (function() {
         if (placeAddressType === 'street_number') {
           // use the street name not the street number for marker label
           markerLabel = bestPlace.address_components[1].long_name;
-          console.log(markerLabel);
         } else {
           markerLabel = bestPlace.address_components[0].long_name;
         }
@@ -717,13 +805,13 @@ var museumApp = (function() {
         });
         // ko observable for visibility
         this.ObsIsVisible = ko.observable(true);
-        this.ObsIsVisible.subscribe(function(currentState) {
-          if (currentState) {
-            marker.setVisible(true);
-          } else {
-            marker.setVisible(false);
-          }
-        });
+        // this.ObsIsVisible.subscribe(function(currentState) {
+        //   if (currentState) {
+        //     marker.setVisible(true);
+        //   } else {
+        //     marker.setVisible(false);
+        //   }
+        // });
         // create 'musuemMarker' object literal
         var museumMarker = {
           obsShowMarker: this.ObsIsVisible, // observable used to hide/show from map
@@ -734,8 +822,9 @@ var museumApp = (function() {
         marker.addListener('click', function(e) {
           mapsModel.infowindow.close();
           panMapToMuseumMarker(museumMarker);
+          openInfoWindow(museumMarker);
         });
-        // add marker to ko observable array
+        // add marker to ko observable array for tracking, disposal etc
         mapsModel.obsArrayMapMarkers.push(museumMarker);
         return museumMarker;
       };
@@ -750,7 +839,6 @@ var museumApp = (function() {
             mapsModel.obsArrayPlaceObjects.push(priKey);
           }
         } else {
-
           console.log(musuemMarker.bestPlace.formatted_address + ' has no musuem places');
         }
       };
@@ -834,6 +922,11 @@ var museumApp = (function() {
       //------------------------------------------------------------------------
 
       function searchHere(location) {
+        // if location is not valid google LatLng object (e.g comes from initmuseumPlaces)
+        // convert it to a google LatLng
+        if (!(location instanceof google.maps.LatLng)) {
+          location = new google.maps.LatLng(location.lat, location.lng);
+        }
         var map = mapsModel.googleMap;
         // use geocoder to find 'preferred place'
         mapsModel.geocoder.geocode({
@@ -859,17 +952,22 @@ var museumApp = (function() {
               //------------------------------------------------------------
               // use prefered type of addresses if possible as more general place
               // name better for the app usage
-              console.dir(results);
+
               var bestPlaceResults = $.grep(results, peferedPlaceP);
               var searchRadius = 5; // default search radius for getMuseumPlaces
               var bestPlace = false;
               if (bestPlaceResults.length > 0) {
-                if (mapsModel.londonPolygonArea.containsLatLng(location)) {
-                  // search location in central london area so make search radius much smaller
-                  // as V&M place data is much richer here
-                  searchRadius = 0.5;
-                  // also use original results rather than bestPlaceResults
-                  // so we an use a street address as the bestPlace
+                var inlondonPoly = inLondon(location);
+                if (inlondonPoly) {
+                  // if search location in within london make search radius much smaller
+                  // as V&M place data is much richer
+                  if (inlondonPoly.name === 'centralLondon') {
+                    searchRadius = 0.5;
+                  } else if (inlondonPoly.name === 'londonArea') {
+                    searchRadius = 2;
+                  }
+                  // use original geocoder results rather than bestPlaceResults
+                  // so we an have a street address closer to the actual location
                   bestPlace = results[0];
                 } else {
                   // choose first address from filtered bestPlaceResults
@@ -877,10 +975,11 @@ var museumApp = (function() {
                 }
               } else {
                 console.log('no peferedPlaceP address');
-                // choose first address of original geocode results
+                // no best place so choose first address of the original geocode results
+                // usually a 'street address'
                 bestPlace = results[0];
               }
-              // check if preferred marker already exists for the preferred place
+              // check if preferred marker already exists for place
               var markerforPlace = mapMarkerExistsRef(bestPlace);
               if (markerforPlace !== false) {
                 panMapToMuseumMarker(markerforPlace);
@@ -902,6 +1001,20 @@ var museumApp = (function() {
         });
       }
 
+      function inLondon(location) {
+        var centralLondonObj = mapsModel.londonPolygonAreas[1];
+        var londonAreaObj = mapsModel.londonPolygonAreas[0];
+        if (centralLondonObj.polygon.containsLatLng(location)) {
+          console.log('central london');
+          return centralLondonObj;
+        } else if (londonAreaObj.polygon.containsLatLng(location)) {
+          console.log('london');
+          return londonAreaObj;
+        } else {
+          return false;
+        }
+      }
+
       function mapMarkerExistsRef(testPlace) {
         var markerArray = mapsModel.obsArrayMapMarkers();
         // check if new best place google ID is within an existing marker
@@ -913,7 +1026,6 @@ var museumApp = (function() {
         return false;
       }
 
-
       // Polygon getBounds extension - google-maps-extensions
       // https://github.com/tparkin/Google-Maps-Point-in-Polygon
       // http://code.google.com/p/google-maps-extensions/source/browse/google.maps.Polygon.getBounds.js
@@ -923,14 +1035,12 @@ var museumApp = (function() {
             paths = this.getPaths(),
             path,
             p, i;
-
           for (p = 0; p < paths.getLength(); p++) {
             path = paths.getAt(p);
             for (i = 0; i < path.getLength(); i++) {
               bounds.extend(path.getAt(i));
             }
           }
-
           return bounds;
         };
       }
@@ -938,12 +1048,10 @@ var museumApp = (function() {
       // Polygon containsLatLng - method to determine if a latLng is within a polygon
       google.maps.Polygon.prototype.containsLatLng = function(latLng) {
         // Exclude points outside of bounds as there is no way they are in the poly
-
         var inPoly = false,
           bounds, lat, lng,
           numPaths, p, path, numPoints,
           i, j, vertex1, vertex2;
-
         // Arguments are a pair of lat, lng variables
         if (arguments.length == 2) {
           if (
@@ -955,7 +1063,6 @@ var museumApp = (function() {
           }
         } else if (arguments.length == 1) {
           bounds = this.getBounds();
-
           if (!bounds && !bounds.contains(latLng)) {
             return false;
           }
@@ -964,19 +1071,15 @@ var museumApp = (function() {
         } else {
           console.log("Wrong number of inputs in google.maps.Polygon.prototype.contains.LatLng");
         }
-
         // Raycast point in polygon method
-
         numPaths = this.getPaths().getLength();
         for (p = 0; p < numPaths; p++) {
           path = this.getPaths().getAt(p);
           numPoints = path.getLength();
           j = numPoints - 1;
-
           for (i = 0; i < numPoints; i++) {
             vertex1 = path.getAt(i);
             vertex2 = path.getAt(j);
-
             if (
               vertex1.lng() < lng &&
               vertex2.lng() >= lng ||
@@ -993,25 +1096,24 @@ var museumApp = (function() {
                 inPoly = !inPoly;
               }
             }
-
             j = i;
           }
         }
-
         return inPoly;
       };
-
 
       //-----------------------------------------------------
       //  mapHelpers - public vars & functions
       //-----------------------------------------------------
       return {
-        makeLondonPolygon: makeLondonPolygon,
+        makeLondonPolygons: makeLondonPolygons,
         markerListClick: markerListClick,
+        removeMarker: removeMarker,
         showAllMarkers: showAllMarkers,
         selectPrefPlace: selectPrefPlace,
         searchHere: searchHere,
         centerMap: centerMap,
+        getMapCenter: getMapCenter,
         prefPlacePinOptions: prefPlacePinOptions,
         musuemPlacePinOptions: musuemPlacePinOptions,
         rebuildMarkersFromMusuemData: rebuildMarkersFromMusuemData,
@@ -1019,7 +1121,7 @@ var museumApp = (function() {
         searchUsersLocation: searchUsersLocation,
         panMapToMuseumMarker: panMapToMuseumMarker,
         mapMarkerExistsRef: mapMarkerExistsRef,
-        filterMarkersToViewport: filterMarkersToViewport
+        obsInfowindowVisible: obsInfowindowVisible
       };
     }(mapHelpers);
     //  END mapHelpers MODULE
@@ -1084,33 +1186,46 @@ var museumApp = (function() {
           });
           mapsModel.googleMap = map; // debug helper
           mapsModel.geocoder = new google.maps.Geocoder(map);
-          // get a google map polygon that represents central london area
-          mapsModel.londonPolygonArea = mapHelpers.makeLondonPolygon();
-          mapsModel.londonPolygonArea.setMap(map);
+          // get google map polygons that represent 'london area' and 'central london'
+          mapsModel.londonPolygonAreas = mapHelpers.makeLondonPolygons();
+          // NOTE: uncomment below to make poly areas draw on map
+          // mapsModel.londonPolygonAreas.forEach(function(entry) {
+          //   entry.polygon.setMap(map);
+          // });
+
+          //---------------------------------------------------------------------
           // Create a DIV to hold custom map control and call the CenterControl()
           // constructor passing in this DIV.
+          //---------------------------------------------------------------------
           var centerControlDiv = document.createElement('div');
           var centerControl = new CenterControl(centerControlDiv, map);
-          centerControlDiv.index = 2; // on top of other controls (e.g later added markers)
-          map.controls[google.maps.ControlPosition.CENTER].push(centerControlDiv);
-
+          centerControlDiv.index = 1;
+          mapsModel.searchHereControl = centerControlDiv;
+          mapsModel.googleMap.controls[google.maps.ControlPosition.CENTER].push(mapsModel.searchHereControl);
+          centerControlDiv.style.display = 'inline';
+          //---------------------------------------------------------------------
+          // map bounds_changed event handler
           map.addListener('bounds_changed', function() {
-            mapHelpers.filterMarkersToViewport();
+            mapsModel.compFilterMarkersToViewport();
           });
+          // map zoom event handler
           map.addListener('zoom_changed', function() {
-            mapHelpers.filterMarkersToViewport();
+            mapsModel.compFilterMarkersToViewport();
           });
-
           // browser window resize event handler
           google.maps.event.addDomListener(window, "resize", function() {
             var center = map.getCenter();
             google.maps.event.trigger(map, "resize");
-            map.setCenter(center);
+            mapsModel.googleMap.setCenter(center);
+          });
+          google.maps.event.addListener(mapsModel.infowindow, 'closeclick', function() {
+            mapHelpers.obsInfowindowVisible(false);
+
           });
           // NOTE CenterControl code from
           // example https://developers.google.com/maps/documentation/javascript/examples/control-custom
           function CenterControl(controlDiv, map) {
-            // Set CSS for the control border.
+            //Set CSS for the control border.
             var controlUI = document.createElement('div');
             controlUI.style.backgroundColor = 'rgba(255,255,255,0.6)';
             controlUI.style.border = '3px solid #fff';
@@ -1132,48 +1247,59 @@ var museumApp = (function() {
             controlText.innerHTML = 'Search Here';
             controlUI.appendChild(controlText);
 
-            // Setup the click event listener
+            //Setup the click event listener
             controlUI.addEventListener('click', function() {
-              mapHelpers.searchHere(mapsModel.googleMap.getCenter());
+              var mapCenter = mapsModel.googleMap.getCenter();
+              // getCenterdoes not return a functional LatLng object  so we make one
+              var location = new google.maps.LatLng(mapCenter.lat(), mapCenter.lng());
+              mapHelpers.searchHere(location);
             });
+          }
+        },
+        update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+          if (mapHelpers.obsInfowindowVisible()) {
+            // hide display center 'search here' control if infoWindow is open
+            mapsModel.googleMap.controls[google.maps.ControlPosition.CENTER].clear();
+          } else {
+            // restore center 'search here' control on map if infoWindow is closed
+            mapsModel.googleMap.controls[google.maps.ControlPosition.CENTER].push(mapsModel.searchHereControl);
           }
         }
       };
 
       // custom knockout binding handler for address autocomplete
       // code modified from example in 'KnockoutJS by Example' by Adan Jaswal ISBN: 9781785288548
-      ko.bindingHandlers.addressAutoComplete = {
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-
-          // create the autocomplete object
-          var options = {
-            types: ['geocode'] // only autocomplete addresses not general business type keyword search
-          };
-          var autocomplete = new google.maps.places.Autocomplete(element, options);
-          // add event Listener for when the user selects address from the autocomplete dropdown
-          google.maps.event.addListener(autocomplete, 'place_changed', function() {
-
-            var place = autocomplete.getPlace();
-            console.log('rssssssp');
-            console.dir(place);
-            if (place.address_components !== undefined) {
-              if (!place.geometry) {
-                console.log("Autocomplete's returned place contains no geometry");
-                // exit handler
-                return;
-              } else {
-                // mapHelpers.panMapToMuseumMarker(place);
-              }
-            } else {
-              console.log("Autocomplete's returned place contains no address_components");
-            }
-          });
-        },
-
-        update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          console.log('autocomplete is:' + ko.unwrap(valueAccessor()));
-        }
-      };
+      // ko.bindingHandlers.addressAutoComplete = {
+      //   init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+      //     // create the autocomplete object
+      //     var options = {
+      //       types: ['geocode'] // only autocomplete addresses not general business type keyword search
+      //     };
+      //     var autocomplete = new google.maps.places.Autocomplete(element, options);
+      //     // add event Listener for when the user selects address from the autocomplete dropdown
+      //     google.maps.event.addListener(autocomplete, 'place_changed', function() {
+      //
+      //       var place = autocomplete.getPlace();
+      //       console.log('rssssssp');
+      //       console.dir(place);
+      //       if (place.address_components !== undefined) {
+      //         if (!place.geometry) {
+      //           console.log("Autocomplete's returned place contains no geometry");
+      //           // exit handler
+      //           return;
+      //         } else {
+      //           // mapHelpers.panMapToMuseumMarker(place);
+      //         }
+      //       } else {
+      //         console.log("Autocomplete's returned place contains no address_components");
+      //       }
+      //     });
+      //   },
+      //
+      //   update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+      //     console.log('autocomplete is:' + ko.unwrap(valueAccessor()));
+      //   }
+      // };
     };
     // method to subscribe to observerable changes
     var koSubscribers = function() {

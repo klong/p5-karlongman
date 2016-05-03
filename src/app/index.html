@@ -18,7 +18,7 @@
 
 <body>
   <!-- MUSEUM APP CONTENT - START -->
-  <div class="grid container">
+  <div class="ui container">
     <div class="ui container">
       <img class="ui tiny image" src="img/event_main_placeholder.png" alt="Victoria and Albert Museum logo">
     </div>
@@ -28,38 +28,43 @@
     </div>
     <!-- MAP AREA END -->
     <!-- APP CONTROLS START -->
-    <div class="ui three column doubling grid container">
-      <div class="column">
-        <button class="ui small primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">show all</button>
-        <!-- <div class="ui small icon input">
-        <input id="autocompleteLocation" type="text" data-bind="addressAutoComplete:"></div> -->
-      </div>
-      <div class="column">
-        <div class="ui category search">
-          <div class="ui icon input">
-            <input type="text" placeholder="Filter...">
-          </div>
-          <div class="results"></div>
-        </div>
-      </div>
-      <div class="column">
-        <button class="ui small secondary button floated right" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
+    <div class="ui container map-controls-area">
+      <button class="ui primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">zoom all</button>
+      <button class="ui secondary button" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
+      <div class="ui action input">
+        <input type="text" data-bind="valueUpdate: 'keydown', textInput: mapsModel.obsFilterSearch">
+        <button class="ui button" data-bind="click: museumDataHelpers.clearFilter">Clear Filter</button>
       </div>
     </div>
     <!-- APP CONTROLS END -->
     <!-- PLACES LIST START -->
     <div class="ui container results">
-      <div class="ui label" data-bind="text: mapsModel.compNumOfPlacesShowing"></div>
+      <div class="ui label" data-bind="visible: (mapsModel.compSortedMapMarkers > 0), text: mapsModel.compNumOfPlacesShowing">
+      </div>
       <!-- map markers list -->
-      <div class="ui fluid styled accordion" id="mapMarkerList">
-        <div id="places" class="ui" data-bind="foreach: mapsModel.compSortedMapMarkers">
-          <!-- map marker list item -->
-          <div class="container title" data-bind="text: bestPlace.formatted_address, visible: obsShowMarker, click: $parent.mapHelpers.markerListClick($data)"></div>
-          <div class="content" data-bind=""></div>
+      <div class="ui large very relaxed selection divided list">
+        <!-- ko foreach: mapsModel.compSortedMapMarkers -->
+        <div class="item">
+          <div class="right floated content">
+            <div class="ui icon button" data-bind="click: $parent.mapHelpers.removeMarker($data) ">
+              <i class="remove icon"></i>
+            </div>
+          </div>
+          <i class="large map marker icon"></i>
+          <div class="content" data-bind="click: $parent.mapHelpers.markerListClick($data)">
+            <a class="header" data-bind="text: bestPlace.formatted_address, visible: obsShowMarker"></a>
+            <div class="description" data-bind="text: bestPlace.place_id"></div>
+          </div>
         </div>
+        <!-- /ko -->
       </div>
     </div>
     <!-- PLACES LIST END -->
+    <div class="ui container">
+      <div class="segment" data-bind="foreach: mapsModel.compFilterMarkersToViewport">
+        <div class="container title" data-bind="text: bestPlace.formatted_address"></div>
+      </div>
+    </div>
     <!-- MUSEUM APP CONTENT - END -->
     <!-- DEBUG LIST START -->
     <div class="debugMessageArea" data-bind="visible: museumApp.debugMessageArea">
@@ -84,10 +89,9 @@
   <!-- ESSENTIAL LIBRARY SCRIPTS -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <!-- APP SCRIPTS -->
+  <script src="js/library/knockout.js"></script>
+  <script src="js/library/knockoutprojections.js"></script>
   <script src="js/library/semantic.js"></script>
-  <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-  <script src="https://rawgit.com/jasondavies/d3-cloud/master/build/d3.layout.cloud.js"></script>
-  <!-- <script src="js/library/d3.layout.cloud.js"></script> -->
   <script src="js/app.js"></script>
 </body>
 
