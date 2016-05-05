@@ -30,6 +30,14 @@ var museumApp = (function() {
     url: 'http://google-maps-utility-library-v3.googlecode.com/svn/tags/markerwithlabel/1.1.9/src/markerwithlabel.js',
     isLoaded: 'no',
     test: "MarkerWithLabel"
+  }, {
+    // google maps infobox api
+    name: 'googleMapsInfobox',
+    dataType: 'script',
+    url: 'http://google-maps-utility-library-v3.googlecode.com/svn/trunk/infobox/src/infobox.js',
+    isLoaded: 'no',
+    test: "Infobox"
+
   }];
 
   // , {
@@ -116,41 +124,34 @@ var museumApp = (function() {
       dataType: resourceRefObj.dataType,
       timeout: (1 * 10000) // 10 second timeout on trying to get a resource
     });
-    // *** 'DONE' callback *** resource has loaded
+    //-------------------------------------------------------------------
+    // 'DONE' callback *** an async resource has loaded sucessfully
+    //-------------------------------------------------------------------
     request.done(function(museumDataResult, textStatus, jqXHR) {
       // set init resource parameter to show load success
       resourceRefObj.isLoaded = 'loaded';
       if (resourceRefObj.dataType === 'json') {
-        //-----------------------------------------
         // callback returned a musuem data resource
-        //-----------------------------------------
-        // update viewModel with new musuem data
         var musuemCollectionType = resourceRefObj.modelCollection;
         if (musuemCollectionType === 'place') {
           // places are also stored in museumMarkers so that
-          // the musuemMarker has local references to the places near it
+          // the musuemMarker has local references to the musuem places near it
           updateMuseumMarker(musuemCollectionType, museumDataResult, updateObjectRef);
-          // as we now have places for a prefPlace
-          // make the 'placeObjects' markers associated with the updateObjectRef (musuemMarker)
-          makePlaceObjectMarkers(updateObjectRef);
         }
-        // create an object literal to pass to the updateMuseumData function
+        // an object literal to pass into updateMuseumData function
         var museumCollectionDataObj = {
           googlePlace: preferedPlace,
           resourceRefObj: resourceRefObj,
           museumCollectionType: resourceRefObj.modelCollection,
           museumData: museumDataResult // AJAX results for museum data
         };
-        // update musuemData and localstorage
+        // update musuemData and localstorage cache
         updateMuseumData(resourceRefObj.modelCollection, museumCollectionDataObj, updateObjectRef);
-        //----------------------------------------
       }
-      //------------------------------------------------------------------------------
       // NOTE: sorry, this code below seems a bit of hack to handle both the async callbacks and
       // requirement to only create the knockout viewModel & applyBindings a single time
       // on load resource success, we try to initalise the museum app, this can only happen
       // when all required scripts and museumData for app have loaded.
-      //------------------------------------------------------------------------------
       // only do if the museum app viewmodel does not exist
       if (museumViewModel.status === false) {
         if (appLibsReadyP()) {
@@ -184,26 +185,15 @@ var museumApp = (function() {
     });
   }
 
-  var makePlaceObjectMarkers = function(musuemMarker) {
-    console.dir(musuemMarker);
-    var numRecords = musuemMarker.VaM.place[0].records.length;
-    var totalRecords = musuemMarker.VaM.place[0].meta.result_count;
-    console.log(numRecords + ' of ' + totalRecords);
-  };
-
   function updateMuseumMarker(modelCollectionName, museumDataResultmuseumData, updateObjectRef) {
-    if (!updateObjectRef.VaM) {
-      updateObjectRef.VaM = {};
-      updateObjectRef.VaM[modelCollectionName] = [];
-      updateObjectRef.VaM[modelCollectionName].push(museumDataResultmuseumData);
+    // the data im musuemData is stored as knockout observableArrays
+    // so the ui can update as musuem data comes in from async ajax calls
+    if (updateObjectRef.VaM().hasOwnProperty[modelCollectionName]) {
+      // append musuem marker data to modelCollection observableArray
+      updateObjectRef.VaM()[modelCollectionName].push(museumDataResultmuseumData);
     } else {
-      if (updateObjectRef.musuemData.Vam.hasOwnProperty[modelCollectionName]) {
-        // append data to musuem marker musuemData.'modelCollectionName' array
-        updateObjectRef.VaM[modelCollectionName].push(museumDataResultmuseumData);
-      } else {
-        updateObjectRef.VaM[modelCollectionName] = [];
-        updateObjectRef.VaM[modelCollectionName].push(museumDataResultmuseumData);
-      }
+      updateObjectRef.VaM()[modelCollectionName] = ko.observableArray([]);
+      updateObjectRef.VaM()[modelCollectionName].push(museumDataResultmuseumData);
     }
   }
 
@@ -262,10 +252,52 @@ var museumApp = (function() {
   //  museum App VIEWMODEL creator
   //----------------------------------------------------------------------------
   var MusAppViewModel = function() {
-    //---------------------------
+
+    //-------------
+    // ui Model
+    //-------------
+    var uiModel = {
+      // default infoWindow is closed
+      obsInfowindowVisible: ko.observable(false)
+    };
+
+    uiModel.compShowSearchResults = ko.computed(function() {
+      // infoWindow open --> hide search results ui
+      // infoWindow closed --> show search results ui
+      visibleState = uiModel.obsInfowindowVisible() ? false : true;
+      return visibleState;
+    });
+
+    uiModel.compShowMusObjectsResults = ko.computed(function() {
+      // infoWindow open --> show MusObjects results ui
+      // infoWindow closed --> hide MusObjects results ui
+      visibleState = uiModel.obsInfowindowVisible() ? true : false;
+      return visibleState;
+    });
+
+    //----------------
     //  maps Model
-    //---------------------------
+    //----------------
     var mapsModel = {
+      // see using an infobox instead of an infoWindow - example http://jsfiddle.net/jehj3/597/
+      // infowindow: new InfoBox({
+      //   content: document.getElementById("infobox") || '',
+      //   disableAutoPan: false,
+      //   maxWidth: 350,
+      //   pixelOffset: new google.maps.Size(-140, 0),
+      //   zIndex: null,
+      //   boxStyle: {
+      //     //background: "url('http://google-maps-utility-library-v3.googlecode.com/svn/trunk/infobox/examples/tipbox.gif') no-repeat",
+      //     background: "url('img/tipbox-white.gif') no-repeat",
+      //     opacity: 1,
+      //     width: "350px"
+      //   },
+      //   closeBoxMargin: "12px 4px 2px 2px",
+      //   // closeBoxURL: "http://www.google.com/intl/en_us/mapfiles/close.gif",
+      //   closeBoxURL: "img/close-window-24.gif",
+      //   infoBoxClearance: new google.maps.Size(1, 1)
+      // }),
+
       // a map info window that will be reused to display different museum object details
       infowindow: new google.maps.InfoWindow({
         content: ''
@@ -413,7 +445,22 @@ var museumApp = (function() {
         }
       }
 
-      function getMusuemPlaceObjects(placePrimaryKey) {
+      function getPrefPlaceMusuemObjects(museumMarker) {
+        if (museumMarker.VaM()) {
+          if (museumMarker.VaM().hasOwnProperty('place')) {
+            var resultsArray = [];
+            var musMarkerPlacesArray = museumMarker.VaM().place;
+            for (var i = 0; i < musMarkerPlacesArray.length; i++) {
+              var musPlace = musMarkerPlacesArray[i];
+
+            }
+          }
+
+        }
+
+      }
+
+      function getPlaceMusuemObjects(placePrimaryKey) {
         var index = 0; // NOTE needed as first argument to getAsyncResource function
         var resourceName = 'V&A - museum placeObjects for collection.place - pk: ' + placePrimaryKey;
         var resourceRefObj = {
@@ -514,7 +561,7 @@ var museumApp = (function() {
 
       return {
         getMuseumPlaces: getMuseumPlaces,
-        getMusuemPlaceObjects: getMusuemPlaceObjects,
+        getPlaceMusuemObjects: getPlaceMusuemObjects,
         getmuseumObjectDetails: getmuseumObjectDetails,
         clearFilter: clearFilter
       };
@@ -526,8 +573,6 @@ var museumApp = (function() {
     //  mapHelpers MODULE
     //-----------------------------------------------------
     var mapHelpers = function() {
-
-      var obsInfowindowVisible = ko.observable(false);
 
       var makeLondonPolygons = function() {
         var londonPolygonArray = [];
@@ -760,20 +805,28 @@ var museumApp = (function() {
 
       var closeInfoWindow = function() {
         mapsModel.infowindow.close();
-        obsInfowindowVisible(false);
+        uiModel.obsInfowindowVisible(false);
       };
 
       var openInfoWindow = function(musuemMarkerObj) {
         var mapMarker = musuemMarkerObj.prefPlaceMarker;
-        content = infoWindowContents(musuemMarkerObj);
-        mapsModel.infowindow.setContent(content);
-        // open the infowindow for marker
-        mapsModel.infowindow.open(map, mapMarker);
-        obsInfowindowVisible(true);
+        // get musuem marker infowIndow content
+        // var content = infoWindowContents(musuemMarkerObj);
+        console.log('-------');
+        console.log(musuemMarkerObj.prefPlaceMarker.labelContent);
+        var test = mapsModel.infowindow.getContent();
+        console.log(typeof(test));
+        // var content = document.getElementById("infobox");
+        // console.dir(content);
+
+        //mapsModel.infowindow.setContent(content);
+        // open musuem marker infowindow
+        mapsModel.infowindow.open(mapsModel.googleMap, mapMarker);
+        uiModel.obsInfowindowVisible(true);
       };
 
       var updateInfoWindow = function(musuemMarker) {
-        var content = mapsModel.infowindow.getContent();
+        // var content = mapsModel.infowindow.getContent();
         content = '';
       };
 
@@ -816,6 +869,7 @@ var museumApp = (function() {
         });
         // create 'musuemMarker' object literal
         var museumMarker = {
+          VaM: ko.observable({}),
           prefPlaceMarker: marker,
           bestPlace: bestPlace
         };
@@ -828,20 +882,6 @@ var museumApp = (function() {
         // add marker to ko observable array for tracking, disposal etc
         mapsModel.obsArrayMapMarkers.push(museumMarker);
         return museumMarker;
-      };
-
-      var makeObjectPlaceMarkers = function(musuemMarker) {
-        // prefPlace has musuem places stored in its Vam object
-        var VaMdata = musuemMarker.VaM;
-        if (!$.isEmptyObject(VaMdata)) {
-          var placesArray = VaMdata.place.records;
-          for (var i = 0; i < array.length; i++) {
-            var priKey = (placesArray[i].pk);
-            mapsModel.obsArrayPlaceObjects.push(priKey);
-          }
-        } else {
-          console.log(musuemMarker.bestPlace.formatted_address + ' has no musuem places');
-        }
       };
 
       var makeMusuemObjectPlaceMarker = function(musuemMarker) {
@@ -863,7 +903,7 @@ var museumApp = (function() {
           prefPlaceMarker: marker,
           bestPlace: bestPlace
         };
-        mapsModel.infowindow.setContent('');
+
         // add click handler to marker
         marker.addListener('click', function(e) {
           closeInfoWindow();
@@ -876,35 +916,21 @@ var museumApp = (function() {
 
       var infoWindowContents = function(museumMarker) {
         var contentString = '';
-        if (museumMarker.VaM) {
+
+        if (museumMarker.VaM()) {
           // marker has some musuem data
-          var museumPlacesArray = museumMarker.VaM.place[0];
-          var museumPlaceRecords = museumPlacesArray.records;
-          var placesInfo = [];
-          for (var i = 0; i < museumPlaceRecords.length; i++) {
-            //placesInfo.push(museumPlaceRecords[i].pk);
-            placesInfo.push(museumPlaceRecords[i].fields.name);
-            placesInfo.push('pk: ' + museumPlaceRecords[i].pk);
-            placesInfo.push('#: ' + museumPlaceRecords[i].fields.museumobject_count);
-            //placesInfo.push(museumPlaceRecords[i].fields.type);
+          if (museumMarker.VaM().hasOwnProperty('place')) {
+
           }
-          // construct the infoWindow HTML content
-          contentString += '<div class="container info-window-content" id="content">';
-          contentString += '<h2>' + museumMarker.bestPlace.address_components[0].short_name + '</h2>';
-          contentString += '<p>' + museumPlacesArray.records.length + ' of ' + museumPlacesArray.meta.result_count + ' museum places</p>';
-          contentString += JSON.stringify(placesInfo);
-          contentString += '</div>';
+
+          return document.getElementById("infobox");
+
         } else {
-          // marker does not have any musuem data
-          // may be because AJAX has not returned yet
-          // construct the infoWindow HTML content
-          contentString += '<div class="container info-window-content" id="content" style="">';
-          contentString += '    <div class="ui active inverted dimmer">';
-          contentString += '      <div class="ui text loader">loading Musuem Data...</div>';
-          contentString += '        <h3>' + museumMarker.bestPlace.address_components[0].short_name + '</h3>';
-          contentString += '      <p>';
-          contentString += '      </p>';
-          contentString += '    </div>';
+          // musuem marker does not have any musuem data so construct a 'loading data' div
+          contentString += '<div class="ui segment info-window-content">';
+          contentString += '      <div class="ui active inverted dimmer">';
+          contentString += '        <div class="ui text loader">Loading</div>';
+          contentString += '      </div>';
           contentString += '</div>';
         }
         return contentString;
@@ -1118,7 +1144,6 @@ var museumApp = (function() {
         searchUsersLocation: searchUsersLocation,
         panMapToMuseumMarker: panMapToMuseumMarker,
         mapMarkerExistsRef: mapMarkerExistsRef,
-        obsInfowindowVisible: obsInfowindowVisible,
         closeInfoWindow: closeInfoWindow
       };
     }(mapHelpers);
@@ -1231,9 +1256,11 @@ var museumApp = (function() {
             mapsModel.googleMap.setCenter(center);
           });
           // infowWindow close button handler
-          google.maps.event.addListener(mapsModel.infowindow, 'closeclick', function() {
+          // NOTE we are using a google infobox not infowindow
+          google.maps.event.addListener(mapsModel.infowindow, 'closeclick', function(event) {
             mapHelpers.closeInfoWindow();
           });
+
           // NOTE CenterControl code from
           // example https://developers.google.com/maps/documentation/javascript/examples/control-custom
           function CenterControl(controlDiv, map) {
@@ -1269,7 +1296,7 @@ var museumApp = (function() {
           }
         },
         update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-          if (mapHelpers.obsInfowindowVisible()) {
+          if (uiModel.obsInfowindowVisible()) {
             // hide display center 'search here' control if infoWindow is open
             mapsModel.googleMap.controls[google.maps.ControlPosition.CENTER].clear();
           } else {
@@ -1331,6 +1358,7 @@ var museumApp = (function() {
 
     return {
       // export PUBLIC functions and variables for MusAppViewModel -
+      uiModel: uiModel,
       mapsModel: mapsModel,
       mapHelpers: mapHelpers,
       museumDataHelpers: museumDataHelpers

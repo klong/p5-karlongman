@@ -27,42 +27,58 @@
       <div class="map-view" id="map" data-bind="mapPanel"></div>
     </div>
     <!-- MAP AREA END -->
-    <!-- APP CONTROLS START -->
-    <div class="ui container map-controls-area">
-      <button class="ui primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">zoom all</button>
-      <button class="ui secondary button" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
-      <div class="ui small action input">
-        <input type="text" data-bind="valueUpdate: 'keydown', textInput: mapsModel.obsFilterSearch">
-        <button class="ui button" data-bind="text: mapsModel.compFilterLabel, click: museumDataHelpers.clearFilter"></button>
-        <div class="ui">
-          <div class="ui large left pointing teal label" data-bind="visible: mapsModel.compNumOfPlacesShowing ,text: mapsModel.compNumOfPlacesShowing"></div>
+    <div id="searchResultsList" data-bind="visible: uiModel.compShowSearchResults">
+      <!-- APP CONTROLS START -->
+      <div class="ui container map-controls-area">
+        <button class="ui primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="visible: true,  click: mapHelpers.showAllMarkers">zoom all</button>
+        <button class="ui secondary button" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
+        <div class="ui small action input">
+          <input type="text" data-bind="valueUpdate: 'keydown', textInput: mapsModel.obsFilterSearch">
+          <button class="ui button" data-bind="text: mapsModel.compFilterLabel, click: museumDataHelpers.clearFilter"></button>
+          <div class="ui">
+            <div class="ui large left pointing teal label" data-bind="visible: mapsModel.compNumOfPlacesShowing ,text: mapsModel.compNumOfPlacesShowing"></div>
+          </div>
         </div>
       </div>
-    </div>
-    <!-- APP CONTROLS END -->
-    <!-- PLACES LIST START -->
-    <div class="ui container results">
-      <!-- map markers list -->
-      <div class="ui large very relaxed selection divided list">
-        <!-- ko foreach: mapsModel.compFilterMapList -->
-        <div class="item" data-bind="">
-          <div class="right floated content">
-            <div class="ui icon button" data-bind="click: $parent.mapHelpers.removeMarker($data) ">
-              <i class="remove icon"></i>
+      <!-- APP CONTROLS END -->
+      <!-- PLACES LIST START -->
+      <div class="ui container results">
+        <!-- map markers list -->
+        <div class="ui large very relaxed selection divided list">
+          <!-- ko foreach: mapsModel.compFilterMapList -->
+          <div class="item" data-bind="">
+            <div class="right floated content">
+              <div class="ui icon button" data-bind="click: $parent.mapHelpers.removeMarker($data) ">
+                <i class="remove icon"></i>
+              </div>
+            </div>
+            <i class="large map marker icon"></i>
+            <div class="content" data-bind="click: $parent.mapHelpers.markerListClick($data)">
+              <a class="header" data-bind="text: bestPlace.formatted_address"></a>
+              <div class="description" data-bind="text: bestPlace.place_id"></div>
             </div>
           </div>
-          <i class="large map marker icon"></i>
-          <div class="content" data-bind="click: $parent.mapHelpers.markerListClick($data)">
-            <a class="header" data-bind="text: bestPlace.formatted_address"></a>
-            <div class="description" data-bind="text: bestPlace.place_id"></div>
-          </div>
+          <!-- /ko -->
         </div>
-        <!-- /ko -->
       </div>
     </div>
     <!-- PLACES LIST END -->
+    <div id="musuemObjectsResultsList" data-bind="visible: uiModel.compShowMusObjectsResults">
+      <div class="ui container musuem-object-list">
+        <div class="ui large very relaxed selection divided list">
+          poppopop
+          <!-- ko foreach: mapsModel.obsArrayPlaceObjects -->
+          <!-- /ko -->
+        </div>
+      </div>
+    </div>
     <div class="ui container">
       <div class="segment" data-bind="foreach: mapsModel.compFilterMapList">
+        <div class="container title" data-bind="text: bestPlace.formatted_address"></div>
+      </div>
+    </div>
+    <div class="infobox-wrapper">
+      <div id="infobox" class="segment" data-bind="foreach: mapsModel.compFilterMapList">
         <div class="container title" data-bind="text: bestPlace.formatted_address"></div>
       </div>
     </div>
