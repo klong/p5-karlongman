@@ -403,9 +403,9 @@ var museumApp = (function() {
       if (count === total) {
         return false;
       } else if (count === 0) {
-        return 'no results';
+        return '<span class="label-span">no results</span>';
       } else {
-        return count + ' of ' + total + ' places';
+        return '<span class="label-span">' + count + ' of ' + total + ' places</span>';
       }
     });
 
@@ -413,7 +413,7 @@ var museumApp = (function() {
       var count = mapsModel.compFilterMapList().length;
       var total = mapsModel.obsArrayMapMarkers().length;
       if (count === total) {
-        return 'Filter Places';
+        return 'Filter ' + total + ' Places';
       } else {
         return 'Clear Filter';
       }
@@ -449,7 +449,6 @@ var museumApp = (function() {
           if (musuemDataObj.googlePlace.place_id === placeIdToRemove) {
             // remove matching place from array then exit loop
             musuemDataPlaceArray.splice(i, 1);
-            console.log(musuemDataObj.googlePlace.place_id + ' ' + placeIdToRemove);
             break;
           }
         }
@@ -753,7 +752,7 @@ var museumApp = (function() {
 
       var markerListClick = function(musuemMarker) {
         panMapToMuseumMarker(musuemMarker);
-        // openInfoWindow(musuemMarker);
+        openInfoWindow(musuemMarker);
       };
 
       var removeMarker = function(musuemMarker) {
@@ -857,11 +856,9 @@ var museumApp = (function() {
       };
 
       var musuemMarkerBounce = function(musuemMarker) {
-        musuemMarker.prefPlaceMarker.setAnimation(google.maps.Animation.BOUNCE);
-      };
-
-      var musuemMarkerStopBounce = function(musuemMarker) {
-        musuemMarker.prefPlaceMarker.setAnimation(null);
+        var marker = musuemMarker.prefPlaceMarker;
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+        setTimeout(function(){ marker.setAnimation(null); }, 1400);
       };
 
       var searchUsersLocation = function() {
@@ -884,10 +881,19 @@ var museumApp = (function() {
           if (museumMarker.bestPlace.geometry.hasOwnProperty('bounds')) {
             // if address has some bounds data
             mapsModel.googleMap.fitBounds(museumMarker.bestPlace.geometry.bounds);
+            // if after bounds zoom we are really close in, back out zoom a bit
+            if (mapsModel.googleMap.getZoom() > 15) {
+              mapsModel.googleMap.setZoom(13);
+            }
           } else {
             // address has no bounds data, pan to the location and set a zoom level instead
             map.panTo(museumMarker.bestPlace.geometry.location);
-            map.setZoom(15);
+            var currZoomLevel = mapsModel.googleMap.getZoom();
+            if (currZoomLevel < 15) {
+              mapsModel.googleMap.setZoom(15);
+            } else {
+              mapsModel.googleMap.setZoom(currZoomLevel);
+            }
           }
         }
       };
@@ -1095,12 +1101,12 @@ var museumApp = (function() {
               } else {
                 // create a new museumMarker for the bestPlace
                 var museumMarker = makeMuseumMarker(bestPlace);
-                panMapToMuseumMarker(museumMarker);
+                //panMapToMuseumMarker(museumMarker);
                 openInfoWindow(museumMarker);
                 // clear map filter if present
-                // if (mapsModel.obsFilterSearch !== '') {
-                //   museumDataHelpers.clearFilter();
-                // }
+                if (mapsModel.obsFilterSearch !== '') {
+                  museumDataHelpers.clearFilter();
+                }
 
                 //-------------------------------------------------------------------------
                 // async populate the musuem marker with V&A museum place search results
@@ -1430,7 +1436,7 @@ var museumApp = (function() {
       mapsModel.compFilterMapList.subscribe(function(newValue) {
         // updates the map to show markers in compFilterMapList
         mapHelpers.filterMarkersOnMap();
-        mapHelpers.showAllMarkers();
+        //mapHelpers.showAllMarkers();
       }, null, "change");
 
     };
@@ -1502,6 +1508,6 @@ $(function() {
   // INIT museum APP
   //---------------------
   museumApp.init();
-
+  //---------------------
 });
 //---------------------------------------------------------

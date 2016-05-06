@@ -60,7 +60,7 @@ p.weight3 {
   visibility: hidden;
   height: 100%;
   width: 100%;
-  /*position: absolute;*/
+
 }
 .map-container {
   height: 100%;
@@ -74,13 +74,6 @@ p.weight3 {
 /*.gm-style-iw {
   height: 150px;
   width: 500px;
-}*/
-
-
-/*#map {
-  height: 500px;
-  width: 100%;
-  margin: 10px;
 }*/
 
 .glasspane {
@@ -110,8 +103,9 @@ p.weight3 {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 .map-controls-area {
-  margin-top: 10px;
+  margin-top: 20px;
   margin-bottom: 10px;
+  border-top: 20px;
 }
 
 .resultsArea {
@@ -134,6 +128,13 @@ p.weight3 {
   background-color: snow;
 }
 
+.label-span {
+  font-family: "Noticia Text";
+  font-weight: 700;
+  font-style: italic;
+  font-size: 14px;
+  line-height: 22px;
+}
 
 .infobox-wrapper {
     display:none;
