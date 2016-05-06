@@ -193,8 +193,10 @@ var museumApp = (function() {
       musuemMarker.VaM()[modelCollectionName] = ko.observableArray([]);
       // add a knockout subscribe function
       // so we are notified when the collection data in marker updates
-      musuemMarker.VaM()[modelCollectionName].subscribe(function(obsColection) {
-        console.log(modelCollectionName + 's changed');
+      musuemMarker.VaM()[modelCollectionName].subscribe(function(newValue) {
+
+        console.log(musuemMarker.prefPlaceMarker.labelContent + ' --> ' + modelCollectionName + ' changed');
+
       });
       // update the MuseumMarkers collection data
       musuemMarker.VaM()[modelCollectionName].push(museumDataResultmuseumData);
@@ -405,6 +407,31 @@ var museumApp = (function() {
     //-----------------------------------------------------
     var museumDataHelpers = function() {
 
+      function removePlacefromMusuemData(musuemMarkerObj) {
+        var placeIdToRemove = musuemMarkerObj.bestPlace.place_id;
+        var musuemDataPlaceArray = museumApp.museumData.data.place;
+        for (var i = 0; i < musuemDataPlaceArray.length; i++) {
+          var musuemDataObj = musuemDataPlaceArray[i];
+          if (musuemDataObj.googlePlace.place_id === placeIdToRemove) {
+            // remove matching place from array then exit loop
+            musuemDataPlaceArray.splice(i,1);
+            console.log(musuemDataObj.googlePlace.place_id + ' ' + placeIdToRemove);
+            break;
+          }
+        }
+        // update the localStorage with museum data
+        if (localStorageP()) {
+          if (localStorage.museumDataStored) {
+            // save stringified version of museumdata obj for future app runs
+            localStorage.museumDataStored = JSON.stringify(museumData.data);
+          } else {
+            // first init the storage object property
+            localStorage.museumDataStored = {};
+            localStorage.museumDataStored = JSON.stringify(museumData.data);
+          }
+        }
+      }
+
       function clearFilter() {
         mapsModel.obsFilterSearch('');
         mapHelpers.showAllMarkers();
@@ -566,12 +593,28 @@ var museumApp = (function() {
         }
       }
 
+      var placesFound = function(musuemMarker) {
+        return (getPlaces(musuemMarker)) ? true : false;
+      };
+
+      var getMusuemMarkerPlaces = function(musuemMarker) {
+        if (musuemMarker.VaM) {
+          if (musuemMarker.VaM().hasOwnProperty('place')) {
+            var placeObject = musuemMarker.VaM().place()[0];
+            return placeObject.records;
+          }
+        }
+        return [];
+      };
+
       return {
         getMuseumPlaces: getMuseumPlaces,
         getPlaceMusuemObjects: getPlaceMusuemObjects,
         getmuseumObjectDetails: getmuseumObjectDetails,
-        clearFilter: clearFilter
+        clearFilter: clearFilter,
+        removePlacefromMusuemData: removePlacefromMusuemData
       };
+
     }(museumDataHelpers);
     //  END museumDataHelpers MODULE
     //-----------------------------------------------------
@@ -680,7 +723,12 @@ var museumApp = (function() {
       };
 
       var removeMarker = function(musuemMarker) {
-        //console.dir(musuemMarker);
+        // take  musuemMarkers map marker off the map
+        musuemMarker.prefPlaceMarker.setMap(null);
+        // remove the musuemMarker from the musuem app
+        mapsModel.obsArrayMapMarkers.remove(musuemMarker);
+        // remove musuemMarker from musuemDat (and localstorage)
+        museumDataHelpers.removePlacefromMusuemData(musuemMarker);
       };
 
       var showAllMarkers = function() {
@@ -864,19 +912,21 @@ var museumApp = (function() {
           visible: true,
           animation: google.maps.Animation.DROP
         });
+
         // create 'musuemMarker' object literal
         var museumMarker = {
           VaM: ko.observable({}),
           prefPlaceMarker: marker,
           bestPlace: bestPlace
         };
+
         // add click handler for marker
         marker.addListener('click', function(e) {
           //closeInfoWindow();
           panMapToMuseumMarker(museumMarker);
-
           openInfoWindow(museumMarker);
         });
+
         // add marker to ko observable array for tracking, disposal etc
         mapsModel.obsArrayMapMarkers.push(museumMarker);
         return museumMarker;
@@ -907,6 +957,7 @@ var museumApp = (function() {
           closeInfoWindow();
           // TODO
         });
+
         // add marker to obsArrayMapMarkers array to track it for disposal etc
         //mapsModel.obsArrayMapMarkers.push(museumMarker);
         return museumMarker;
@@ -1007,7 +1058,7 @@ var museumApp = (function() {
                 // create a new museumMarker for the bestPlace
                 var museumMarker = makeMuseumMarker(bestPlace);
                 panMapToMuseumMarker(museumMarker);
-                openInfoWindow(musMarkerforPlace);
+                openInfoWindow(museumMarker);
                 // clear map filter if present
                 // if (mapsModel.obsFilterSearch !== '') {
                 //   museumDataHelpers.clearFilter();
@@ -1132,6 +1183,21 @@ var museumApp = (function() {
         return inPoly;
       };
 
+      var filterMarkersOnMap = function() {
+        // Comparing two arrays from http://www.knockmeout.net/2011/04/utility-functions-in-knockoutjs.html
+        var filteredMarkers = ko.utils.compareArrays(mapsModel.obsArrayMapMarkers(), mapsModel.compFilterMapList());
+        ko.utils.arrayForEach(filteredMarkers, function(museumMarker) {
+          if (museumMarker.status === "deleted") {
+            // take marker off map
+            museumMarker.value.prefPlaceMarker.setMap(null);
+          } else if (museumMarker.status === "retained") {
+            // make sure marker is on map
+            museumMarker.value.prefPlaceMarker.setMap(mapsModel.googleMap);
+          }
+        });
+      };
+
+
       //-----------------------------------------------------
       //  mapHelpers - public vars & functions
       //-----------------------------------------------------
@@ -1151,7 +1217,8 @@ var museumApp = (function() {
         searchUsersLocation: searchUsersLocation,
         panMapToMuseumMarker: panMapToMuseumMarker,
         mapMarkerExistsRef: mapMarkerExistsRef,
-        closeInfoWindow: closeInfoWindow
+        closeInfoWindow: closeInfoWindow,
+        filterMarkersOnMap: filterMarkersOnMap
       };
     }(mapHelpers);
     //  END mapHelpers MODULE
@@ -1244,28 +1311,14 @@ var museumApp = (function() {
             }
           };
 
-          var filterMarkersOnMap = function() {
-            // Comparing two arrays from http://www.knockmeout.net/2011/04/utility-functions-in-knockoutjs.html
-            var filteredMarkers = ko.utils.compareArrays(mapsModel.obsArrayMapMarkers(), mapsModel.compFilterMapList());
-            ko.utils.arrayForEach(filteredMarkers, function(museumMarker) {
-              if (museumMarker.status === "deleted") {
-                // take marker off map
-                museumMarker.value.prefPlaceMarker.setMap(null);
-              } else if (museumMarker.status === "retained") {
-                // make sure marker is on map
-                  museumMarker.value.prefPlaceMarker.setMap(mapsModel.googleMap);
-              }
-            });
-          };
 
           // map bounds_changed event handler
           map.addListener('bounds_changed', function() {
-            filterMarkersOnMap();
+
           });
           // map zoom event handler
           map.addListener('zoom_changed', function() {
             markerLabelsDisplay();
-            filterMarkersOnMap();
           });
           // browser window resize event handler
           google.maps.event.addDomListener(window, "resize", function() {
@@ -1332,18 +1385,13 @@ var museumApp = (function() {
     var koSubscribers = function() {
 
       // for event AFTER obsUserLocalPlace has changed
-      mapsModel.obsUserLocalPlace.subscribe(function(oldValue) {
+      mapsModel.obsUserLocalPlace.subscribe(function(newValue) {
         console.log('local place has changed');
       }, null, "change");
 
-      // event for AFTER obsSelectedPlace changed
-      // that is, a new place has been got from google api callback
-      // mapsModel.obsSelectedPlace.subscribe(function(value) {
-      //   console.log('obsSelectedPlace changed');
-      // }, null, "change");
-
-      mapsModel.compFilterMapList.subscribe(function(value) {
+      mapsModel.compFilterMapList.subscribe(function(newValue) {
         // updates the map to show markers in compFilterMapList
+        mapHelpers.filterMarkersOnMap();
         mapHelpers.showAllMarkers();
       }, null, "change");
 

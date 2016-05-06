@@ -46,16 +46,16 @@
         <!-- map markers list -->
         <div class="ui large very relaxed selection divided list">
           <!-- ko foreach: mapsModel.compFilterMapList -->
-          <div class="item" data-bind="">
+          <div class="item" data-bind="click: $parent.mapHelpers.markerListClick.bind($data)">
             <div class="right floated content">
-              <div class="ui icon button" data-bind="click: $parent.mapHelpers.removeMarker($data) ">
+              <div class="ui icon button" data-bind="click: $parent.mapHelpers.removeMarker.bind($data)">
                 <i class="remove icon"></i>
               </div>
             </div>
             <i class="large map marker icon"></i>
-            <div class="content" data-bind="click: $parent.mapHelpers.markerListClick($data)">
+            <div class="content">
               <a class="header" data-bind="text: bestPlace.formatted_address"></a>
-              <div class="description" data-bind="text: bestPlace.place_id"></div>
+              <div class="description" data-bind="visible: , text: "></div>
             </div>
           </div>
           <!-- /ko -->
