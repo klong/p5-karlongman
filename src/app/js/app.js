@@ -85,6 +85,39 @@ var museumApp = (function() {
     return storage;
   }
 
+  //-------------------------------------------------------------------------
+  // NOTE makeInitMapmuseumData call is delayed using a setTimeout
+  // as we need the viewModel to be bound and all app resources have loaded
+  //-------------------------------------------------------------------------
+  var makeInitMapmuseumData = function() {
+    var initData = museumApp.initmuseumPlaces;
+    if ((!museumApp.localStorageP()) || (museumApp.museumData.data === undefined)) {
+      // localStorage is disabled or is the first time app is run.
+      // so make some default museumMarkers using lat lng locations in initmuseumPlaces
+      console.log('first time app run or no local storage');
+      makeDefaultMusuemPlaces();
+    } else { // we have localStorage museumData
+      museumApp.museumViewModel.vm.mapHelpers.rebuildMarkersFromMusuemData();
+    }
+  };
+
+  function makeDefaultMusuemPlaces() {
+    if (initData.length > 0) {
+      for (var i = 0; i < initData.length; i++) {
+        var placeRef = initData[i];
+        // doing a 'map search' at locations defined in initmuseumPlaces creates museumMarkers
+        museumApp.museumViewModel.vm.mapHelpers.searchHere(placeRef.location);
+      }
+    }
+  }
+
+  // initmuseumPlaces function is called with short setTimeout
+  // to allow museum app to allow all initalising and before
+  // we try and rebuild museumMarkers from museum data
+  // setTimeout(function() {
+  //   makeInitMapmuseumData();
+  // }, 2000); // wait before running
+
   //-------------------
   //  init museum APP
   //-------------------
@@ -164,6 +197,7 @@ var museumApp = (function() {
           ko.applyBindings(museumViewModel.vm);
           museumViewModel.status = true;
           addMessage(' 😀 viewmodel READY');
+          makeInitMapmuseumData();
           return true;
         } else {
           return false;
@@ -414,7 +448,7 @@ var museumApp = (function() {
           var musuemDataObj = musuemDataPlaceArray[i];
           if (musuemDataObj.googlePlace.place_id === placeIdToRemove) {
             // remove matching place from array then exit loop
-            musuemDataPlaceArray.splice(i,1);
+            musuemDataPlaceArray.splice(i, 1);
             console.log(musuemDataObj.googlePlace.place_id + ' ' + placeIdToRemove);
             break;
           }
@@ -843,15 +877,19 @@ var museumApp = (function() {
         }
       };
 
-      var panMapToLocation = function(loc) {
-        map.panTo(loc);
-        map.setZoom(9);
-      };
-
       var panMapToMuseumMarker = function(museumMarker) {
         closeInfoWindow();
-        var bestPlace = museumMarker.bestPlace;
-        mapsModel.googleMap.fitBounds(bestPlace.geometry.bounds);
+        // bestPlace is a async google place from geocoder, so check is available
+        if (museumMarker.bestPlace) {
+          if (museumMarker.bestPlace.geometry.hasOwnProperty('bounds')) {
+            // if address has some bounds data
+            mapsModel.googleMap.fitBounds(museumMarker.bestPlace.geometry.bounds);
+          } else {
+            // address has no bounds data, pan to the location and set a zoom level instead
+            map.panTo(museumMarker.bestPlace.geometry.location);
+            map.setZoom(15);
+          }
+        }
       };
 
       var closeInfoWindow = function() {
@@ -1455,38 +1493,15 @@ var museumApp = (function() {
 //---------------------------------------------------------
 $(function() {
   // set height of map area to 50% of the current document height
-  // hack to get google map to display as div will have 0 height if not set
+  // hack to get google map bug to display as div will
+  // have 0 height if div id map is not set
   var halfDocumentHeight = ($(window).height() / 2);
   $('#map').height(halfDocumentHeight);
   $('#map').css('visibility', 'visible');
-  //-----------------------------
+  //---------------------
   // INIT museum APP
-  //-----------------------------
+  //---------------------
   museumApp.init();
-  //-----------------------------
-  var makeInitMapmuseumData = function() {
-    var initData = museumApp.initmuseumPlaces;
-    if ((!museumApp.localStorageP()) || (museumApp.museumData.data === undefined)) {
-      console.log('first time app run or no local storage');
-      // localStorage is disabled or is the first time app is run.
-      // so make some default museumMarkers using lat lng locations in initmuseumPlaces
-      if (initData.length > 0) {
-        for (var i = 0; i < initData.length; i++) {
-          var placeRef = initData[i];
-          // doing a 'map search' at locations defined in initmuseumPlaces creates museumMarkers
-          museumApp.museumViewModel.vm.mapHelpers.searchHere(placeRef.location);
-        }
-      }
-    } else { // we have localStorage museumData
-      museumApp.museumViewModel.vm.mapHelpers.rebuildMarkersFromMusuemData();
-    }
-  };
-  // initmuseumPlaces function is called with short setTimeout
-  // to allow museum app to allow all initalising and before
-  // we try and rebuild museumMarkers from museum data
-  setTimeout(function() {
-    makeInitMapmuseumData();
-  }, 500); // wait before running
 
 });
 //---------------------------------------------------------
