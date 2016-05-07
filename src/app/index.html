@@ -19,21 +19,30 @@
 <body>
   <!-- MUSEUM APP CONTENT - START -->
   <div class="ui container">
-    <div class="ui container">
-      <img class="ui tiny image" src="img/event_main_placeholder.png" alt="Victoria and Albert Museum logo">
-      <div class="ui segment loading-screen">
-        <div class="ui active inverted dimmer" data-bind="">
-          <div class="ui indeterminate text loader">Preparing Files</div>
+    <div class="ui stackable sixteen column grid">
+      <div class="three wide column">
+        <div class="ui">
+          <img class="ui tiny image" src="img/event_main_placeholder.png" alt="Victoria and Albert Museum logo">
         </div>
-        <p></p>
       </div>
+      <div class="ten wide column">
+        <div class="ui header">
+          search for musuem objects by double clicking on the map
+        </div>
+      </div>
+    </div>
+    <div class="ui segment loading-screen">
+      <div class="ui active inverted dimmer" data-bind="">
+        <div class="ui indeterminate text loader">Preparing Files</div>
+      </div>
+      <p></p>
     </div>
     <!-- MAP AREA START -->
     <div class="ui map-container">
       <div class="ui segment map-view" id="map" data-bind="mapPanel"></div>
     </div>
     <!-- MAP AREA END -->
-    <div id="searchResultsList" data-bind="visible: uiModel.compShowSearchResults">
+    <div id="searchResultsList">
       <!-- APP CONTROLS START -->
       <div class="ui stackable map-controls-area">
         <div class="ui buttons">
@@ -63,7 +72,7 @@
         <i class="large map marker icon"></i>
         <div class="content">
           <a class="header" data-bind="text: bestPlace.formatted_address"></a>
-          <div class="description" data-bind="visible: , text: "></div>
+          <div class="description" data-bind="visible: true, text: museumDataHelpers.musuemPlacesFound"></div>
         </div>
       </div>
       <!-- /ko -->
@@ -78,33 +87,27 @@
       </div>
     </div>
   </div>
-  <div class="ui container">
-    <div class="segment" data-bind="foreach: mapsModel.compFilterMapList">
-      <div class="container title" data-bind="text: bestPlace.formatted_address"></div>
-    </div>
-  </div>
+  <!-- INFO WINDOW START -->
   <div class="infobox-wrapper">
     <div id="infobox" class="segment" data-bind="foreach: mapsModel.compFilterMapList">
       <div class="container title" data-bind="text: bestPlace.formatted_address"></div>
     </div>
   </div>
+  <!-- INFO WINDOW END -->
   <!-- MUSEUM APP CONTENT - END -->
   <!-- DEBUG LIST START -->
   <div class="debugMessageArea" data-bind="visible: museumApp.debugMessageArea">
-    <div class="">
-      <label data-bind="fadeInText: mapsModel.placeName"></label>
-    </div>
-    <div class="">
-      <label data-bind="text: 'dataReady ' + museumApp.museumDataReady.status"></label>
-    </div>
-    <div class="">
+    <div class="message">
       <input data-bind="textInput: mapsModel.placeName " />
       <div data-bind="fadeInText: mapsModel.placeName"></div>
       <div data-bind="fadeInText: mapsModel.compCurrentPlaceIdLngLat"></div>
     </div>
-    <div class="">
+    <div class="message">
       <div id="log-area" class="resultsArea">
       </div>
+    </div>
+    <div class="message">
+      <label data-bind="fadeInText: mapsModel.placeName"></label>
     </div>
   </div>
   <!-- DEBUG LIST END -->
