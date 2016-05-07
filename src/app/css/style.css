@@ -108,6 +108,10 @@ p.weight3 {
   border-top: 20px;
 }
 
+.loading-screen {
+  display: none;
+}
+
 .resultsArea {
   background-color: snow;
   text-align: left;

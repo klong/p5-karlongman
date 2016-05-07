@@ -13,6 +13,8 @@ var museumApp = (function() {
   var museumViewModel = {
     status: false
   };
+  // this array will have items added as ajax javascript libraries in initAppLibs load sucessfully
+  var appLibsReady = [];
   //----------------------------------------------------------------------------
   // initAppLibs array defines external script need before our app can run
   //----------------------------------------------------------------------------
@@ -22,7 +24,7 @@ var museumApp = (function() {
     dataType: 'script',
     url: 'https://maps.googleapis.com/maps/api/js?v=3&libraries=places&key=AIzaSyCRpuFnelWb6VGyKNtMyUbKopJC-1anU7g',
     isLoaded: 'no',
-    test: "google.maps"
+    test: "google"
   }, {
     // markerwithlabel.js library
     name: 'markerwithlabel',
@@ -36,7 +38,7 @@ var museumApp = (function() {
     dataType: 'script',
     url: 'http://google-maps-utility-library-v3.googlecode.com/svn/trunk/infobox/src/infobox.js',
     isLoaded: 'no',
-    test: "Infobox"
+    test: "InfoBox"
   }, {
     // knockout.js library
     name: 'knockout',
@@ -140,7 +142,7 @@ var museumApp = (function() {
     //  Async get JAVASCRIPT resources required by app
     //---------------------------------------------------
     $.each(initAppLibs, getAsyncResource);
-    addMessage('AJAX javascript LOAD REQUESTS : ' + initAppLibs.length);
+    addMessage('AJAX javascript REQUESTS : ' + initAppLibs.length);
   }
   //-------------------
   // END init
@@ -159,9 +161,18 @@ var museumApp = (function() {
     // 'DONE' callback *** an async resource has loaded sucessfully
     //-------------------------------------------------------------------
     request.done(function(museumDataResult, textStatus, jqXHR) {
+
       // set init resource parameter to show load success
       resourceRefObj.isLoaded = 'loaded';
-      if (resourceRefObj.dataType === 'json') {
+      //----------------------------------------------------------------
+      if (resourceRefObj.dataType === 'script') {
+        var testedP = (window[resourceRefObj.test] === undefined) ? false : true;
+        var libLoaded = {
+          resourceLoaded: resourceRefObj,
+          testResult: testedP
+        };
+        appLibsReady.push(libLoaded);
+      } else if (resourceRefObj.dataType === 'json') {
         // callback returned a musuem data resource
         var musuemCollectionType = resourceRefObj.modelCollection;
         if (musuemCollectionType === 'place') {
@@ -185,7 +196,10 @@ var museumApp = (function() {
       // when all required scripts and museumData for app have loaded.
       // only do if the museum app viewmodel does not exist
       if (museumViewModel.status === false) {
-        if (appLibsReadyP()) {
+        // skip any test for app libs ready if viewmodel exits
+        if (allAppLibrariesReady()) {
+          // all of the musuem app libraries have loaded and tested
+          console.log('ALL libs ready');
           addMessage('😀 museum App Scripts READY');
           //-----------------------------------
           // create Knockout options & APP VIEWMODEL
@@ -200,7 +214,7 @@ var museumApp = (function() {
           makeInitMapmuseumData();
           return true;
         } else {
-          return false;
+          console.log('ALL libs NOT');
         }
       }
       //-----------------------------------------------------------------------
@@ -273,13 +287,9 @@ var museumApp = (function() {
   }
   //-----------------------------------------------------------------------
 
-  function isLoaded(element, index, obj) {
-    return (element.isLoaded === 'loaded');
-  }
-
   // function to check all external javascript libraries have loaded
-  function appLibsReadyP() {
-    return initAppLibs.every(isLoaded);
+  function allAppLibrariesReady() {
+    return (appLibsReady.length === initAppLibs.length);
   }
 
   // helper function to append a status paragraph to webpage log area
@@ -467,7 +477,7 @@ var museumApp = (function() {
 
       function clearFilter() {
         mapsModel.obsFilterSearch('');
-        mapHelpers.showAllMarkers();
+        //mapHelpers.showAllMarkers();
       }
 
       function getMuseumPlaces(museumMarker, preferedPlace, searchRadius) {
@@ -858,7 +868,9 @@ var museumApp = (function() {
       var musuemMarkerBounce = function(musuemMarker) {
         var marker = musuemMarker.prefPlaceMarker;
         marker.setAnimation(google.maps.Animation.BOUNCE);
-        setTimeout(function(){ marker.setAnimation(null); }, 1400);
+        setTimeout(function() {
+          marker.setAnimation(null);
+        }, 1400);
       };
 
       var searchUsersLocation = function() {
@@ -876,26 +888,29 @@ var museumApp = (function() {
 
       var panMapToMuseumMarker = function(museumMarker) {
         closeInfoWindow();
-        // bestPlace is a async google place from geocoder, so check is available
-        if (museumMarker.bestPlace) {
-          if (museumMarker.bestPlace.geometry.hasOwnProperty('bounds')) {
-            // if address has some bounds data
-            mapsModel.googleMap.fitBounds(museumMarker.bestPlace.geometry.bounds);
-            // if after bounds zoom we are really close in, back out zoom a bit
-            if (mapsModel.googleMap.getZoom() > 15) {
-              mapsModel.googleMap.setZoom(13);
-            }
+        if (museumMarker.bestPlace.geometry.hasOwnProperty('bounds')) {
+          console.log('has bounds');
+          // if address has some bounds data
+          // mapsModel.googleMap.fitBounds(museumMarker.bestPlace.geometry.bounds);
+          // if after bounds zoom we are really close in, back out zoom a bit
+          // if (mapsModel.googleMap.getZoom() > 14) {
+          //   mapsModel.googleMap.setZoom(14);
+          // }
+          map.panTo(museumMarker.bestPlace.geometry.location);
+          mapsModel.googleMap.setZoom(14);
+        } else {
+          // address has no bounds data, pan to the location and set a zoom level instead
+          console.log('manual zoom');
+          map.panTo(museumMarker.bestPlace.geometry.location);
+          var currZoomLevel = mapsModel.googleMap.getZoom();
+          if (currZoomLevel < 11) {
+            mapsModel.googleMap.setZoom(14);
           } else {
-            // address has no bounds data, pan to the location and set a zoom level instead
-            map.panTo(museumMarker.bestPlace.geometry.location);
-            var currZoomLevel = mapsModel.googleMap.getZoom();
-            if (currZoomLevel < 15) {
-              mapsModel.googleMap.setZoom(15);
-            } else {
-              mapsModel.googleMap.setZoom(currZoomLevel);
-            }
+            mapsModel.googleMap.setZoom(currZoomLevel);
           }
         }
+        // indicate marker with a short bounce
+        musuemMarkerBounce(museumMarker);
       };
 
       var closeInfoWindow = function() {
@@ -1092,17 +1107,17 @@ var museumApp = (function() {
                 // usually a 'street address'
                 bestPlace = results[0];
               }
-              // check if preferred marker already exists for place
               var musMarkerforPlace = mapMarkerExistsRef(bestPlace);
               if (musMarkerforPlace !== false) {
+                // museum marker already exists for bestplace
                 panMapToMuseumMarker(musMarkerforPlace);
-                openInfoWindow(musMarkerforPlace);
+                // openInfoWindow(musMarkerforPlace);
                 console.log('marker already exits for ' + bestPlace.formatted_address);
               } else {
                 // create a new museumMarker for the bestPlace
                 var museumMarker = makeMuseumMarker(bestPlace);
-                //panMapToMuseumMarker(museumMarker);
-                openInfoWindow(museumMarker);
+                // panMapToMuseumMarker(museumMarker);
+                // openInfoWindow(museumMarker);
                 // clear map filter if present
                 if (mapsModel.obsFilterSearch !== '') {
                   museumDataHelpers.clearFilter();
@@ -1315,6 +1330,7 @@ var museumApp = (function() {
       ko.bindingHandlers.mapPanel = {
         init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
           map = new google.maps.Map(element, {
+            disableDoubleClickZoom: true,
             mapTypeControl: false,
             zoomControl: true,
             zoomControlOptions: {
@@ -1338,12 +1354,12 @@ var museumApp = (function() {
           // Create a DIV to hold custom map control and call the CenterControl()
           // constructor passing in this DIV.
           //---------------------------------------------------------------------
-          var centerControlDiv = document.createElement('div');
-          var centerControl = new CenterControl(centerControlDiv, map);
-          centerControlDiv.index = 1;
-          mapsModel.searchHereControl = centerControlDiv;
-          mapsModel.googleMap.controls[google.maps.ControlPosition.CENTER].push(mapsModel.searchHereControl);
-          centerControlDiv.style.display = 'inline';
+          // var centerControlDiv = document.createElement('div');
+          // var centerControl = new CenterControl(centerControlDiv, map);
+          // centerControlDiv.index = 1;
+          // mapsModel.searchHereControl = centerControlDiv;
+          // mapsModel.googleMap.controls[google.maps.ControlPosition.CENTER].push(mapsModel.searchHereControl);
+          // centerControlDiv.style.display = 'inline';
           //---------------------------------------------------------------------
           // function to filter observable array of map markers
 
@@ -1354,20 +1370,24 @@ var museumApp = (function() {
               markers[i].prefPlaceMarker.labelVisible = zoomLimit;
             }
           };
-
-
           // map bounds_changed event handler
           map.addListener('bounds_changed', function() {
-
           });
           // map zoom event handler
           map.addListener('zoom_changed', function() {
             markerLabelsDisplay();
           });
+          // map double click event handler
+          google.maps.event.addListener(mapsModel.googleMap, 'dblclick', function(event) {
+            console.dir(event);
+            mapHelpers.searchHere(event.latLng);
+            console.log('double click');
+          });
           // browser window resize event handler
           google.maps.event.addDomListener(window, "resize", function() {
+            var halfDocumentHeight = ($(window).height() / 2);
+            $('#map').height(halfDocumentHeight);
             var center = map.getCenter();
-            google.maps.event.trigger(map, "resize");
             mapsModel.googleMap.setCenter(center);
           });
           // infowindow callback handler
@@ -1382,46 +1402,46 @@ var museumApp = (function() {
 
           // NOTE CenterControl code from
           // example https://developers.google.com/maps/documentation/javascript/examples/control-custom
-          function CenterControl(controlDiv, map) {
-            //Set CSS for the control border.
-            var controlUI = document.createElement('div');
-            controlUI.style.backgroundColor = 'rgba(255,255,255,0.6)';
-            controlUI.style.border = '3px solid #fff';
-            controlUI.style.borderRadius = '8px';
-            controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,0.75)';
-            controlUI.style.cursor = 'pointer';
-            controlUI.style.marginBottom = '12px';
-            controlUI.style.textAlign = 'bottom';
-            controlUI.title = 'searchControl';
-            controlDiv.appendChild(controlUI);
-            // Set CSS for the control interior.
-            var controlText = document.createElement('div');
-            controlText.style.color = 'rgb(25,25,25)';
-            controlText.style.fontFamily = 'Noticia Text,Arial,sans-serif';
-            controlText.style.fontSize = '14px';
-            controlText.style.lineHeight = '32px';
-            controlText.style.paddingLeft = '8px';
-            controlText.style.paddingRight = '8px';
-            controlText.innerHTML = 'Search Here';
-            controlUI.appendChild(controlText);
-
-            //Setup the click event listener
-            controlUI.addEventListener('click', function() {
-              var mapCenter = mapsModel.googleMap.getCenter();
-              // getCenterdoes not return a functional LatLng object  so we make one
-              var location = new google.maps.LatLng(mapCenter.lat(), mapCenter.lng());
-              mapHelpers.searchHere(location);
-            });
-          }
+          // function CenterControl(controlDiv, map) {
+          //   //Set CSS for the control border.
+          //   var controlUI = document.createElement('div');
+          //   controlUI.style.backgroundColor = 'rgba(255,255,255,0.6)';
+          //   controlUI.style.border = '3px solid #fff';
+          //   controlUI.style.borderRadius = '8px';
+          //   controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,0.75)';
+          //   controlUI.style.cursor = 'pointer';
+          //   controlUI.style.marginBottom = '12px';
+          //   controlUI.style.textAlign = 'bottom';
+          //   controlUI.title = 'searchControl';
+          //   controlDiv.appendChild(controlUI);
+          //   // Set CSS for the control interior.
+          //   var controlText = document.createElement('div');
+          //   controlText.style.color = 'rgb(25,25,25)';
+          //   controlText.style.fontFamily = 'Noticia Text,Arial,sans-serif';
+          //   controlText.style.fontSize = '14px';
+          //   controlText.style.lineHeight = '32px';
+          //   controlText.style.paddingLeft = '8px';
+          //   controlText.style.paddingRight = '8px';
+          //   controlText.innerHTML = 'Search Here';
+          //   controlUI.appendChild(controlText);
+          //
+          //   //Setup the click event listener
+          //   controlUI.addEventListener('click', function() {
+          //     var mapCenter = mapsModel.googleMap.getCenter();
+          //     // getCenterdoes not return a functional LatLng object  so we make one
+          //     var location = new google.maps.LatLng(mapCenter.lat(), mapCenter.lng());
+          //     mapHelpers.searchHere(location);
+          //   });
+          // }
         },
         update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-          if (uiModel.obsInfowindowVisible()) {
-            // hide display center 'search here' control if infoWindow is open
-            mapsModel.googleMap.controls[google.maps.ControlPosition.CENTER].clear();
-          } else {
-            // restore center 'search here' control on map if infoWindow is closed
-            mapsModel.googleMap.controls[google.maps.ControlPosition.CENTER].push(mapsModel.searchHereControl);
-          }
+          // if (uiModel.obsInfowindowVisible()) {
+          //   // hide display center 'search here' control if infoWindow is open
+          //   mapsModel.googleMap.controls[google.maps.ControlPosition.CENTER].clear();
+          // } else {
+          //   // restore center 'search here' control on map if infoWindow is closed
+          //   mapsModel.googleMap.controls[google.maps.ControlPosition.CENTER].push(mapsModel.searchHereControl);
+          // }
         }
       };
     };
@@ -1488,7 +1508,8 @@ var museumApp = (function() {
     localStorageP: localStorageP,
     museumData: museumData,
     museumDataReady: museumDataReady,
-    addMessage: addMessage
+    addMessage: addMessage,
+    appLibsReady: appLibsReady
   };
   // END MODULE museumApp
   //---------------------------------------------------------
