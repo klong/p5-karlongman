@@ -17,6 +17,7 @@
 </head>
 
 <body>
+
   <!-- MUSEUM APP CONTENT - START -->
   <div class="ui container">
     <div class="ui stackable sixteen column grid">
@@ -42,7 +43,7 @@
       <div class="ui segment map-view" id="map" data-bind="mapPanel"></div>
     </div>
     <!-- MAP AREA END -->
-    <div id="searchResultsList">
+    <div id="searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList">
       <!-- APP CONTROLS START -->
       <div class="ui stackable map-controls-area">
         <div class="ui buttons">
@@ -53,61 +54,73 @@
           <input type="text" data-bind="valueUpdate: 'keydown', textInput: mapsModel.obsFilterSearch">
           <button class="ui small button" data-bind="text: mapsModel.compFilterLabel, click: museumDataHelpers.clearFilter"></button>
         </div>
-        <div class="ui left pointing teal label" data-bind="visible: mapsModel.compNumOfPlacesShowing, html: mapsModel.compNumOfPlacesShowing"></div>
+        <div class="ui left pointing teal label" data-bind="visible: mapsModel.compNumOfPlacesShowing, html: mapsModel.compNumOfPlacesShowing">
+        </div>
+      </div>
+      <!-- APP CONTROLS END -->
+      <!-- PLACES LIST START -->
+      <div class="ui container results">
+        <!-- map markers list -->
+        <div class="ui very relaxed selection divided list">
+          <!-- ko foreach: mapsModel.compFilterMapList -->
+          <div class="item" data-bind="click: $parent.mapHelpers.markerListClick.bind($data)">
+            <div class="right floated content">
+              <div class="circular small ui basic icon button" data-bind="click: $parent.mapHelpers.removeMarker.bind($data)">
+                <i class="remove icon"></i>
+              </div>
+            </div>
+            <i class="large map marker icon"></i>
+            <div class="content">
+              <a class="header" data-bind="text: bestPlace.formatted_address"></a>
+              <!-- <div class="description" data-bind="visible: true, text: museumDataHelpers.musuemPlacesFound"></div> -->
+            </div>
+          </div>
+          <!-- /ko -->
+        </div>
       </div>
     </div>
-  </div>
-  <!-- APP CONTROLS END -->
-  <!-- PLACES LIST START -->
-  <div class="ui container results">
-    <!-- map markers list -->
-    <div class="ui very relaxed selection divided list">
-      <!-- ko foreach: mapsModel.compFilterMapList -->
-      <div class="item" data-bind="click: $parent.mapHelpers.markerListClick.bind($data)">
-        <div class="right floated content">
-          <div class="circular small ui basic icon button" data-bind="click: $parent.mapHelpers.removeMarker.bind($data)">
-            <i class="remove icon"></i>
+    <!-- PLACES LIST END -->
+    <!-- MUSUEUM PLACE OBJECTS LIST START -->
+    <div id="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemObjectPlaces">
+      <div class="ui container musuem-object-list">
+        <div class="ui large very relaxed selection divided list">
+          <!-- ko foreach: mapsModel.compFilterMapList -->
+          <a class="header" data-bind="text: $parent.uiModel.obsSelectedMusuemObjectPlace"></a>
+          <!-- /ko -->
+        </div>
+      </div>
+    </div>
+    <!-- MUSUEUM PLACE OBJECTS LIST END -->
+    <div class="infobox-wrapper">
+      <div id="hiddenInfoBox" data-bind="visible: true">
+        <div class="ui container musuem-object-list">
+          <div class="ui small selection divided list">
+            <!-- ko foreach: mapsModel.obsArrayPlaceObjects -->
+            <div class="item">
+              <div class="content">
+                <a class="header" data-bind="text: $data"></a>
+              </div>
+            </div>
+            <!-- /ko -->
           </div>
         </div>
-        <i class="large map marker icon"></i>
-        <div class="content">
-          <a class="header" data-bind="text: bestPlace.formatted_address"></a>
-          <div class="description" data-bind="visible: true, text: museumDataHelpers.musuemPlacesFound"></div>
+      </div>
+    </div>
+    <!-- MUSEUM APP CONTENT - END -->
+    <!-- DEBUG LIST START -->
+    <div class="debugMessageArea" data-bind="visible: museumApp.debugMessageArea">
+      <div class="message">
+        <input data-bind="textInput: mapsModel.placeName " />
+        <div data-bind="fadeInText: mapsModel.placeName"></div>
+        <div data-bind="fadeInText: mapsModel.compCurrentPlaceIdLngLat"></div>
+      </div>
+      <div class="message">
+        <div id="log-area" class="resultsArea">
         </div>
       </div>
-      <!-- /ko -->
-    </div>
-  </div>
-  <!-- PLACES LIST END -->
-  <div id="musuemObjectsResultsList" data-bind="visible: uiModel.compShowMusObjectsResults">
-    <div class="ui container musuem-object-list">
-      <div class="ui large very relaxed selection divided list">
-        <!-- ko foreach: mapsModel.obsArrayPlaceObjects -->
-        <!-- /ko -->
+      <div class="message">
+        <label data-bind="fadeInText: mapsModel.placeName"></label>
       </div>
-    </div>
-  </div>
-  <!-- INFO WINDOW START -->
-  <div class="infobox-wrapper">
-    <div id="infobox" class="segment" data-bind="foreach: mapsModel.compFilterMapList">
-      <div class="container title" data-bind="text: bestPlace.formatted_address"></div>
-    </div>
-  </div>
-  <!-- INFO WINDOW END -->
-  <!-- MUSEUM APP CONTENT - END -->
-  <!-- DEBUG LIST START -->
-  <div class="debugMessageArea" data-bind="visible: museumApp.debugMessageArea">
-    <div class="message">
-      <input data-bind="textInput: mapsModel.placeName " />
-      <div data-bind="fadeInText: mapsModel.placeName"></div>
-      <div data-bind="fadeInText: mapsModel.compCurrentPlaceIdLngLat"></div>
-    </div>
-    <div class="message">
-      <div id="log-area" class="resultsArea">
-      </div>
-    </div>
-    <div class="message">
-      <label data-bind="fadeInText: mapsModel.placeName"></label>
     </div>
   </div>
   <!-- DEBUG LIST END -->

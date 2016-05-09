@@ -145,10 +145,11 @@ p.weight3 {
     display:none;
 }
 
-#infobox {
+.infoBox {
     /*border:1px solid black;*/
     margin-top: 8px;
-    background:snow;
+    background: snow;
+    background-color: snow;
     color:black;
     font-family: "Noticia Text", "Arial", sans-serif;
     font-size:12px;
@@ -158,4 +159,6 @@ p.weight3 {
     border-radius: 8px;
     -webkit-box-shadow: 0 0 4px #000;
     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
+    width: 350px;
+    height: 100px;
 }
