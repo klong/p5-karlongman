@@ -23,8 +23,7 @@
         </div>
       </div>
       <div class="ui top right attached label">
-         <i class="pointing down icon"></i>
-        double click the map to search for new museum objects
+        <i class="pointing down icon"></i> double click the map to search for new museum objects
       </div>
     </div>
     <div class="ui segment loading-screen">
@@ -57,7 +56,7 @@
       <div class="ui container results">
         <!-- map markers list -->
         <div class="ui very relaxed selection divided list">
-          <!-- ko foreach: mapsModel.obsFilteredBoundsMarkers -->
+          <!-- ko foreach: {data: mapsModel.obsFilteredBoundsMarkers, as: 'museumMarker'}-->
           <div class="item" data-bind="click: $parent.mapHelpers.markerListClick.bind($data)">
             <div class="right floated content">
               <div class="circular small ui basic icon button" data-bind="click: $parent.mapHelpers.removeMarker.bind($data)">
@@ -67,7 +66,7 @@
             <i class="large map marker icon"></i>
             <div class="content">
               <a class="header" data-bind="text: prefPlaceMarker.labelContent"></a>
-              <div class="description" data-bind="text: $parent.uiModel.numOfObjectPlacesLabel($data) "></div>
+              <div class="description" data-bind="visible: museumMarker.obsMuseumMarkerListLabel, text: museumMarker.obsDescriptionLabel"></div>
             </div>
           </div>
           <!-- /ko -->
@@ -79,54 +78,70 @@
     <div id="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemObjectPlaces">
       <div class="ui container">
         <div class="ui large very relaxed selection divided list">
-          <!-- ko foreach: mapsModel.compMusuemPlaceObjects -->
-          <a class="header" data-bind="html: $data"></a>
+          <!-- ko foreach: {data: uiModel.obsMuseumMarkerPlaceObjects, as: 'museumPlace'}-->
+          <div class="item" data-bind="click: $parent.mapHelpers.objectPlaceListClick.bind($data)">
+            <div class="header" data-bind="text: museumPlace.fields.name"></div>
+            <div class="description" data-bind="text: $parent.uiModel.obsSelectedMusuemMarker().obsDescriptionLabel"></div>
+          </div>
           <!-- /ko -->
         </div>
       </div>
     </div>
-    <!-- MUSUEUM PLACES LIST END -->
-    <!-- Museum marker - infoBox - START -->
-    <div class="infobox-wrapper">
-      <div id="hiddenInfoBox" class="musuemobject-infoBox">
-        <div class="ui container musuem-object-list">
-          <div class="ui small selection divided list">
-            <!-- ko foreach: mapsModel.obsArrayPlaceObjects -->
-            <div class="item">
-              <div class="content">
-                <a class="header" data-bind="text: $data"></a>
-              </div>
+  </div>
+  <!-- MUSUEUM PLACES LIST END -->
+  <!-- MUSUEUM OBJECTS LIST START -->
+  <div id="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjects">
+    <div class="ui container">
+      <div class="ui large very relaxed selection divided list">
+        <!-- ko foreach: {data: uiModel.obsMuseumMarkerPlaceObjects, as: 'museumPlace'}-->
+        <div class="item">
+          <div class="header" data-bind="text: museumPlace.fields.name"></div>
+          <div class="description" data-bind="text: $parent.uiModel.obsSelectedMusuemMarker().obsDescriptionLabel"></div>
+        </div>
+        <!-- /ko -->
+      </div>
+    </div>
+  </div>
+  <!-- MUSUEUM OBJECTS LIST END -->
+  <!-- Museum marker - infoBox - START -->
+  <div class="infobox-wrapper">
+    <div id="hiddenInfoBox" class="musuemobject-infoBox">
+      <div class="ui container musuem-object-list">
+        <div class="ui small selection divided list">
+          <!-- ko foreach: mapsModel.obsArrayPlaceObjects -->
+          <div class="item">
+            <div class="content">
+              <a class="header" data-bind="text: $data"></a>
             </div>
-            <!-- /ko -->
           </div>
+          <!-- /ko -->
         </div>
       </div>
     </div>
-    <!-- Museum marker - infoBox - END -->
+  </div>
+  <!-- Museum marker - infoBox - END -->
 
-    <!-- MUSEUM APP CONTENT - END -->
-    <!-- DEBUG LIST START -->
-    <div class="debugMessageArea" data-bind="visible: museumApp.debugMessageArea">
-      <div class="message">
-        <input data-bind="textInput: mapsModel.placeName " />
-        <div data-bind="fadeInText: mapsModel.placeName"></div>
-        <div data-bind="fadeInText: mapsModel.compCurrentPlaceIdLngLat"></div>
+  <!-- MUSEUM APP CONTENT - END -->
+  <!-- DEBUG LIST START -->
+  <div class="debugMessageArea" data-bind="visible: museumApp.debugMessageArea">
+    <div class="message">
+      <input data-bind="textInput: mapsModel.placeName " />
+      <div data-bind="fadeInText: mapsModel.placeName"></div>
+      <div data-bind="fadeInText: mapsModel.compCurrentPlaceIdLngLat"></div>
+    </div>
+    <div class="message">
+      <div id="log-area" class="resultsArea">
       </div>
-      <div class="message">
-        <div id="log-area" class="resultsArea">
-        </div>
-      </div>
-      <div class="message">
-        <label data-bind="fadeInText: mapsModel.placeName"></label>
-      </div>
+    </div>
+    <div class="message">
+      <label data-bind="fadeInText: mapsModel.placeName"></label>
     </div>
   </div>
   <!-- DEBUG LIST END -->
   <!-- ESSENTIAL LIBRARY SCRIPTS -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <!-- APP SCRIPTS -->
-  <script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRpuFnelWb6VGyKNtMyUbKopJC-1anU7g&callback=mapsCallback">
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRpuFnelWb6VGyKNtMyUbKopJC-1anU7g&callback=window.mapsCallback">
   </script>
   <script src="js/library/semantic.js"></script>
   <script src="js/app.js"></script>
