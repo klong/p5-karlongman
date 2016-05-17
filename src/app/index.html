@@ -14,7 +14,7 @@
 </head>
 
 <body>
-  <!-- MUSEUM APP CONTENT - START -->
+  <!-- MUSEUM APP content - START -->
   <div class="ui container">
     <div class="ui stackable sixteen column grid">
       <div class="three wide column">
@@ -22,7 +22,7 @@
           <img class="ui tiny image" src="img/event_main_placeholder.png" alt="Victoria and Albert Museum logo">
         </div>
       </div>
-      <div class="ui top right attached label">
+      <div class="ui top right attached label" data-bind="visible: uiModel.obsHelpVisible">
         <i class="pointing down icon"></i> double click the map to search for new museum objects
       </div>
     </div>
@@ -32,13 +32,13 @@
       </div>
       <p></p>
     </div>
-    <!-- MAP AREA START -->
+    <!-- MAP area START -->
     <div class="ui map-container">
       <div class="ui segment map-view" id="map" data-bind="mapPanel"></div>
     </div>
-    <!-- MAP AREA END -->
+    <!-- MAP area END -->
     <div id="searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList">
-      <!-- APP CONTROLS START -->
+      <!-- APP controls START -->
       <div class="ui stackable map-controls-area">
         <div class="ui buttons">
           <button class="ui primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="text: uiModel.compNumOfPlacesForZoomOnMap ,click: mapHelpers.showAllMarkers"><span class="label-span"></span></button>
@@ -51,8 +51,8 @@
         <div class="ui left pointing teal label" data-bind="visible: mapsModel.obsFilterSearch() !== '', text: uiModel.compFilterLabelText">
         </div>
       </div>
-      <!-- APP CONTROLS END -->
-      <!-- MUSEUM MARKERS LIST START -->
+      <!-- APP controls END -->
+      <!-- MUSEUM MARKERS list START -->
       <div class="ui container results">
         <!-- map markers list -->
         <div class="ui very relaxed selection divided list">
@@ -66,62 +66,47 @@
             <i class="large map marker icon"></i>
             <div class="content">
               <a class="header" data-bind="text: prefPlaceMarker.labelContent"></a>
-              <div class="description" data-bind="visible: museumMarker.obsMuseumMarkerListLabel, text: museumMarker.obsDescriptionLabel"></div>
+              <div class="description" data-bind="visible: $data.obsMuseumMarkerListLabel, text: $data.obsMuseumMarkerListLabel"></div>
             </div>
           </div>
           <!-- /ko -->
         </div>
       </div>
     </div>
-    <!-- MUSEUM MARKERS LIST END -->
-    <!-- MUSUEUM PLACES LIST START -->
+    <!-- MUSEUM MARKERS list END -->
+    <!-- MUSUEUM OBJECT PLACES list START -->
     <div id="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemObjectPlaces">
       <div class="ui container">
+        <h3 data-bind="text: uiModel.obsSelectedMusuemMarker().obsMuseumMarkerListLabel"></h3>
         <div class="ui large very relaxed selection divided list">
-          <!-- ko foreach: {data: uiModel.obsMuseumMarkerPlaceObjects, as: 'museumPlace'}-->
-          <div class="item" data-bind="click: $parent.mapHelpers.objectPlaceListClick.bind($data)">
-            <div class="header" data-bind="text: museumPlace.fields.name"></div>
-            <div class="description" data-bind="text: $parent.uiModel.obsSelectedMusuemMarker().obsDescriptionLabel"></div>
+          <!-- ko foreach: {data: uiModel.obsCurrentPlaceObjects, as: 'museumObjectPlace'}-->
+          <div class="item" data-bind="click: $parent.mapHelpers.objectPlaceListClick.bind($parent)">
+            <div class="header" data-bind="text: museumObjectPlace.fields.name"></div>
+            <div class="description" data-bind="visible: museumObjectPlace.fields.museumobject_count, text: museumObjectPlace.fields.museumobject_count"></div>
           </div>
           <!-- /ko -->
         </div>
       </div>
     </div>
   </div>
-  <!-- MUSUEUM PLACES LIST END -->
-  <!-- MUSUEUM OBJECTS LIST START -->
+  <!-- MUSUEUM OBJECT PLACES list END -->
+  <!-- MUSUEUM OBJECTS list START -->
   <div id="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjects">
     <div class="ui container">
       <div class="ui large very relaxed selection divided list">
-        <!-- ko foreach: {data: uiModel.obsMuseumMarkerPlaceObjects, as: 'museumPlace'}-->
+        <!-- ko foreach: {data: uiModel.obsCurrentMuseumObjects, as: 'museumObject'}-->
         <div class="item">
-          <div class="header" data-bind="text: museumPlace.fields.name"></div>
-          <div class="description" data-bind="text: $parent.uiModel.obsSelectedMusuemMarker().obsDescriptionLabel"></div>
+          <img class="ui fluid image" src="img/sampleVaMsmall_jpg_s.jpg" alt="pop">
+          <div class="header" data-bind="text: museumObject.fields.name"></div>
+          <div class="description" data-bind="text: 'A museum object'"></div>
         </div>
         <!-- /ko -->
       </div>
     </div>
   </div>
-  <!-- MUSUEUM OBJECTS LIST END -->
-  <!-- Museum marker - infoBox - START -->
-  <div class="infobox-wrapper">
-    <div id="hiddenInfoBox" class="musuemobject-infoBox">
-      <div class="ui container musuem-object-list">
-        <div class="ui small selection divided list">
-          <!-- ko foreach: mapsModel.obsArrayPlaceObjects -->
-          <div class="item">
-            <div class="content">
-              <a class="header" data-bind="text: $data"></a>
-            </div>
-          </div>
-          <!-- /ko -->
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- Museum marker - infoBox - END -->
+  <!-- MUSUEUM OBJECTS list END -->
+  <!-- MUSEUM APP content - END -->
 
-  <!-- MUSEUM APP CONTENT - END -->
   <!-- DEBUG LIST START -->
   <div class="debugMessageArea" data-bind="visible: museumApp.debugMessageArea">
     <div class="message">
@@ -133,11 +118,9 @@
       <div id="log-area" class="resultsArea">
       </div>
     </div>
-    <div class="message">
-      <label data-bind="fadeInText: mapsModel.placeName"></label>
-    </div>
   </div>
   <!-- DEBUG LIST END -->
+
   <!-- ESSENTIAL LIBRARY SCRIPTS -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <!-- APP SCRIPTS -->

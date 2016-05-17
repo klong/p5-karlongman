@@ -12,21 +12,7 @@ body {
   font-style: normal;
   font-weight: 400;
 }
-.place-labels {
-  color: salmon;
-  background-color: white;
-  font-family: "Noticia Text", "Arial", sans-serif;
-  font-size: 12px;
-  /*font-weight: bold;*/
-  text-align: center;
-  white-space: nowrap;
-  padding-left: 4px;
-  padding-right: 4px;
-  border: 2px;
-  border-style: solid;
-  border-radius: 6px;
-  box-shadow: 2px 3px 3px rgba(0, 0, 0, 0.3);
-}
+
 p.weight1 {
   font-family: "Noticia Text";
   font-weight: 400;
@@ -149,23 +135,25 @@ p.weight3 {
     /*border:1px solid black;*/
     margin-top: 8px;
     background: snow;
-    background-color: snow;
     color:black;
     font-family: "Noticia Text", "Arial", sans-serif;
     font-size:12px;
-    font-weight: bold;
     padding: .5em 1em;
     -webkit-border-radius: 8px;
     -moz-border-radius: 8px;
+    border-style: solid;
+    border-width: medium;;
+    border-color: gold;
     border-radius: 8px;
     -webkit-box-shadow: 0 0 4px #000;
     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
     width: 200px;
-    height: 30px;
+    height: 36px;
 }
 
 .musuemobject-infoBox {
     /*border:1px solid black;*/
+    display: inline-block;
     margin-top: 8px;
     background: snow;
     background-color: snow;
@@ -179,6 +167,22 @@ p.weight3 {
     border-radius: 8px;
     -webkit-box-shadow: 0 0 4px #000;
     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
-    width: 450px;
+    width: 420px;
     height: 300px;
+}
+
+.place-labels {
+  color: salmon;
+  background-color: white;
+  font-family: "Noticia Text", "Arial", sans-serif;
+  font-size: 12px;
+  /*font-weight: bold;*/
+  text-align: center;
+  white-space: nowrap;
+  padding-left: 4px;
+  padding-right: 4px;
+  border: 2px;
+  border-style: solid;
+  border-radius: 6px;
+  box-shadow: 2px 3px 3px rgba(0, 0, 0, 0.3);
 }
