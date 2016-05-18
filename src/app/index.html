@@ -80,7 +80,7 @@
         <h3 data-bind="text: uiModel.obsSelectedMusuemMarker().obsMuseumMarkerListLabel"></h3>
         <div class="ui large very relaxed selection divided list">
           <!-- ko foreach: {data: uiModel.obsCurrentPlaceObjects, as: 'museumObjectPlace'}-->
-          <div class="item" data-bind="click: $parent.mapHelpers.objectPlaceListClick.bind($parent)">
+          <div class="item" data-bind="click: $parent.mapHelpers.objectPlaceListClick.bind($data)">
             <div class="header" data-bind="text: museumObjectPlace.fields.name"></div>
             <div class="description" data-bind="visible: museumObjectPlace.fields.museumobject_count, text: museumObjectPlace.fields.museumobject_count"></div>
           </div>
@@ -92,13 +92,14 @@
   <!-- MUSUEUM OBJECT PLACES list END -->
   <!-- MUSUEUM OBJECTS list START -->
   <div id="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjects">
-    <div class="ui container">
+    <div class="ui container" >
+      <h3 data-bind="text: uiModel.obsCurrentMuseumObjects().length + ' museum objects'" ></h3>
       <div class="ui large very relaxed selection divided list">
         <!-- ko foreach: {data: uiModel.obsCurrentMuseumObjects, as: 'museumObject'}-->
-        <div class="item">
-          <img class="ui fluid image" src="img/sampleVaMsmall_jpg_s.jpg" alt="pop">
-          <div class="header" data-bind="text: museumObject.fields.name"></div>
-          <div class="description" data-bind="text: 'A museum object'"></div>
+        <div class="item" data-bind="click: $parent.mapHelpers.objectListClick.bind($data)">
+          <img class="ui tiny image" src="../img/VandA_logo1-120x35.jpg" alt="no image" data-bind="attr:{src: museumObject.imageURL, alt: museumObject.fields.object}">
+          <div class="header" data-bind="text: museumObject.fields.title"></div>
+          <div class="description" data-bind="text: museumObject.fields.object + ' ' + museumObject.fields.artist + ' ' + museumObject.fields.year_start"></div>
         </div>
         <!-- /ko -->
       </div>

@@ -264,13 +264,27 @@ var museumApp = (function() {
           updateTheMuseumMarker(musuemCollectionType, museumDataResult, updateObjectRef);
           //------------------------------------------------------------
         } else if (musuemCollectionType === 'placeObjects') {
+          // add an external imageURL for each museumObject in the museumDataResult
+          // (only if its 'primary_image_id' field is not "")
+          var museumDataResultWithImgURLs = addImageURLProperty(museumDataResult);
           // an object literal for 'placeObjects' musuemData
           museumCollectionDataObj = {
             resourceRefObj: resourceRefObj,
             museumCollectionType: resourceRefObj.modelCollection,
             museumData: museumDataResult
           };
+        } else if (musuemCollectionType === 'objectDetails') {
+          // update observable that is used for infobox contents
+          var objectDetails = museumDataResult[0];
+          museumApp.museumViewModel.vm.uiModel.obsSelectedMusuemObject(objectDetails);
+          // an object literal for 'objectDetails' musuemData
+          museumCollectionDataObj = {
+            resourceRefObj: resourceRefObj,
+            museumCollectionType: resourceRefObj.modelCollection,
+            museumData: objectDetails
+          };
         }
+        //-----------------------------------------------------
         // update musuemData and localstorage cache
         if ($.isEmptyObject(museumCollectionDataObj)) {
           console.log('did not recognise JSON musuemCollectionType ' + musuemCollectionType);
@@ -290,6 +304,23 @@ var museumApp = (function() {
     request.always(function(jqXHR, textStatus, errorThrown) {
       addMessage('😀 ' + resourceRefObj.name + ' :- AJAX ' + resourceRefObj.dataType + ' ' + textStatus);
     });
+  };
+
+  var addImageURLProperty = function(museumObjectDataArray) {
+    var recordsArray = museumObjectDataArray.records;
+    for (var i = 0; i < recordsArray.length; i++) {
+      var museumObj = recordsArray[i];
+      if (museumObj.fields.primary_image_id.length > 0) {
+        var VaMURL = "http://media.vam.ac.uk/media/thira/collection_images/";
+        var imgNumber = museumObj.fields.primary_image_id;
+        var firstSixChars = imgNumber.substring(0, 6);
+        var imgURL = VaMURL + firstSixChars + "/" + imgNumber + "_jpg_s.jpg";
+        // add new 'imgURL' property to fields object
+        museumObj.imageURL = imgURL;
+      }
+
+    }
+    return museumObjectDataArray;
   };
 
   var updateTheMuseumMarker = function(modelCollectionName, museumDataResult, musuemMarker) {
@@ -346,7 +377,7 @@ var museumApp = (function() {
     var resourceRefObj = museumCollectionData.resourceRefObj;
     var storageName = resourceRefObj.modelCollection;
     // default random name to store data under for debugging if better name not found
-    var storedObjectName = generateId(20);
+    var storedObjectName = 'unknown_' + generateId(20);
     if (storageName === 'place') {
       storedObjectName = resourceRefObj.placeID;
       // 'place' property - google place id
@@ -354,6 +385,8 @@ var museumApp = (function() {
       // note VaM primary key for place is a number
       // so we convert to a string to use it as a property name
       storedObjectName = resourceRefObj.search_parameters.place.toString();
+    } else if (storageName === 'objectDetails') {
+      storedObjectName = museumCollectionData.museumData.pk.toString();
     }
     // keep museumCollectionDataObj for musuem app use
     if (!museumData.data) {
@@ -497,40 +530,43 @@ var museumApp = (function() {
     //-------------
     var uiModel = {
       // see using an google infobox instead of an infoWindow - example http://jsfiddle.net/jehj3/597/
+      //------------------------------------
+      // infoBox for musuem places details
       infowindow: new InfoBox({
         boxClass: 'infoBox',
         content: '',
         disableAutoPan: false,
         maxWidth: 200,
-        pixelOffset: new google.maps.Size(-100, 20), // offset to show window below musuemMarker label
+        pixelOffset: new google.maps.Size(-110, 20), // offset to show window below musuemMarker label
         zIndex: null,
-        closeBoxMargin: "2px 2px 2px 2px",
+        //closeBoxMargin: "1px 1px 1px 1px",
         // closeBoxURL: "http://www.google.com/intl/en_us/mapfiles/close.gif",
         closeBoxURL: "img/close-window-16.gif",
         infoBoxClearance: new google.maps.Size(1, 1)
       }),
+      //------------------------------------
       // infoBox for museum object details
       musemObjectWindow: new InfoBox({
         boxClass: 'musuemobject-infoBox',
         content: '',
         disableAutoPan: false,
         // maxWidth: 420,
-        pixelOffset: new google.maps.Size(-210, 60), // offset to show window below musuemMarker label
+        pixelOffset: new google.maps.Size(-210, 70), // offset to show window below musuemMarker label
         zIndex: null,
-        closeBoxMargin: "2px 2px 2px 2px",
+        // closeBoxMargin: "0 0 2px 2px",
         // closeBoxURL: "http://www.google.com/intl/en_us/mapfiles/close.gif",
         closeBoxURL: "img/close-window-16.gif",
-        // infoBoxClearance: new google.maps.Size(1, 1)
+        infoBoxClearance: new google.maps.Size(1, 1)
       }),
-      // uiModel observables
+      //------------------------------------
+      // uiModel observables for use in UI
       obsHelpVisible: ko.observable(true),
       obsInfowindowVisible: ko.observable(false), // default infoWindow is closed
       obsMusemObjectWindowVisible: ko.observable(false),
       obsSelectedMusuemMarker: ko.observable(false),
       obsSelectedMusuemObjectPlace: ko.observable(false),
       obsSelectedMusuemObject: ko.observableArray(false),
-      obsCurrentMuseumObject: ko.observable(false),
-      // uiModel observable Arrays
+      // observable Arrays for use museum data objects in UI
       obsCurrentPlaceObjects: ko.observableArray([]),
       obsCurrentMuseumObjects: ko.observableArray([])
     };
@@ -655,24 +691,25 @@ var museumApp = (function() {
         };
         // setup the musuem places from existing museumData if available
         var placeDataResults = musuemDataIfExists(resourceRefObj.modelCollection, resourceRefObj.placeID);
-        console.log('data exists:');
-        console.dir(placeDataResults);
         // no exisitng museumData
         if (placeDataResults !== false) {
-          // setup a new object literal to store museum data in musuemMarker
+          // setup a new object literal to store in the musuemMarker
           var museumCollectionDataObj = {
             googlePlace: preferedPlace,
             resourceRefObj: resourceRefObj,
             museumCollectionType: resourceRefObj.modelCollection, // property name used in musuemData to store data
             museumData: placeDataResults
           };
-          return museumCollectionDataObj;
+          //---------------------------------------------------------
+          // update the uiModel to have current museum object places
+          //---------------------------------------------------------
+          uiModel.obsCurrentPlaceObjects(placeDataResults);
+          //---------------------------------------------------------
         } else {
-          // else use async AJAX call to try and get some place data
+
+          // else use async AJAX call to try and get some place data and update the uiModel if success
           var index = 0; // NOTE needed as first argument to getAsyncResource function
           getAsyncResource(index, resourceRefObj, museumMarker);
-          // immediately return empty object - async callback side effect adds the data
-          return {};
         }
       };
 
@@ -710,8 +747,7 @@ var museumApp = (function() {
             getAsyncResource(index, resourceRefObj, selectedMuseumMarker);
           } else {
             // we have all available object places in museumData
-            uiModel.obsSelectedMusuemObjectPlace(placeObjectsDataResults);
-            return placeObjectsDataResults;
+            uiModel.obsCurrentMuseumObjects(placeObjectsDataResults.museumData.records);
           }
         }
       };
@@ -724,43 +760,13 @@ var museumApp = (function() {
           modelCollection: 'objectDetails',
           dataType: 'json',
           search_parameters: {
-            object_number: "O153358"
+            object_number: museumObjectNumber
           },
-          url: 'http://www.vam.ac.uk/api/json/museumobject/', // V&A museum collection.museumobject search REST service
+          url: 'http://www.vam.ac.uk/api/json/museumobject/' + museumObjectNumber, // V&A museum collection.museumobject search REST service
           isLoaded: 'no'
         };
-        var ObjectDetailsResults = false;
-
-        if (ObjectDetailsResults !== false) {
-          // populate the placeObjects data from musuemData
-          // TODO ***NEEDS DOING***
-          // return ObjectDetailsObj;
-        } else {
-          // make an AJAX async call for placeObjects data
-          getAsyncResource(index, resourceRefObj);
-          // immediately return empty object - async callback side effect adds the data
-          return {};
-        }
-      };
-
-      var ObjPKeyDataExists = function(dataName, keyName) {
-        // placeID is preferred google place id
-        if (!museumApp.museumData.hasOwnProperty('data')) {
-          // no musuem data (e.g if browsers localstorage is disabled)
-          return false;
-        } else if (museumApp.museumData.data.hasOwnProperty(dataName)) {
-          var value = museumApp.museumData.data[dataName].keyName;
-          if (value) {
-            console.log('------------');
-            console.dir(value);
-            return value;
-          } else {
-            return result; // false
-          }
-        } else {
-          // no dataName in musuemData
-          return false;
-        }
+        // make an AJAX async call for placeObjects data we dont store this object details data
+        getAsyncResource(index, resourceRefObj);
       };
 
       var musuemDataIfExists = function(storageName, dataName) {
@@ -915,12 +921,16 @@ var museumApp = (function() {
         // set the uiModel state
         uiModel.obsSelectedMusuemObjectPlace(objectPlaceObj);
         //---------------------------
-        var museumMarker = uiModel.obsSelectedMusuemMarker();
-        // get musuem data for objectPlace (from museumData or AJAX call)
-        museumDataHelpers.requestPlaceMusuemObjects(objectPlaceObj.pk, museumMarker);
+        var selectedMuseumMarker = uiModel.obsSelectedMusuemMarker();
+        // get museum data for objectPlace (from museumData or AJAX call)
+        museumDataHelpers.requestPlaceMusuemObjects(objectPlaceObj.pk, selectedMuseumMarker);
         // open the musuemObject details window
-        openMuseumObjectWindow(museumMarker);
+        openMuseumObjectWindow(selectedMuseumMarker);
+      };
 
+      var objectListClick = function(museumObj) {
+        objectNumber = museumObj.fields.object_number;
+        museumDataHelpers.getmuseumObjectDetails(objectNumber);
       };
 
       var removeMarker = function(musuemMarker) {
@@ -1069,10 +1079,11 @@ var museumApp = (function() {
       };
 
       var openMuseumObjectWindow = function(museumMarker) {
+
         // pan the map up by 1/3 of map height to show all infobox
         panMapByPercentage(mapsModel.googleMap, 0, -0.4);
         //-----------------------------------------------
-        // open musuemPlaceObjects window at map marker for obsSelectedMuseumMArker
+        // open musuemPlaceObjects window at map marker for obsSelectedMuseumMarker
         uiModel.musemObjectWindow.open(mapsModel.googleMap, museumMarker.prefPlaceMarker);
         uiModel.obsMusemObjectWindowVisible(true);
       };
@@ -1088,15 +1099,45 @@ var museumApp = (function() {
         mapRef.panTo(newCenter);
       };
 
-      var updateMusemObjectInfoBoxContents = function(objectPlaceObj) {
-        var content = 'not done yet...';
+      var getPrimaryImageURL = function(objectDetails) {
+        var details = objectDetails.fields;
+        if (details.image_set.length > 0) {
+          var firstImage = details.image_set[0].fields.local;
+          var noFileExtension = firstImage.substring(0, firstImage.length - 4);
+          // '_jpg_w.jpg' is VAM api - 265px square cropped version of image
+          var firstImageURL = "http://media.vam.ac.uk/media/thira/" + noFileExtension + '_jpg_w.jpg';
+          return firstImageURL;
+        } else {
+          return false;
+        }
+      };
 
-        // uiModel.obsCurrentMuseumObject
+      var updateMusemObjectInfoBoxContents = function(objectDetails) {
+        var details = objectDetails.fields;
+        var primaryImageDiv = '';
+        var primaryImageURL = getPrimaryImageURL(objectDetails);
+        if (primaryImageURL) {
+          primaryImageDiv = '<div class="image"><img src="' + primaryImageURL + '"></div>';
+        }
+        var content = '';
+        content += '<div class="ui card">';
+        content += primaryImageDiv;
+        content += '<div class ="content">';
+        content += ' <div class="header">' + details.object;
+        content += '  <div class="meta"><span class="date">' + details.date_text + '</span></div>';
+        content += '    <div class="description">' + details.public_access_description;
+        content += '     <p>' + details.public_access_description + '</p>';
+        content += '     <p>' + details.physical_description +'</p>';
+        content += '  </div>';
+        content += ' </div>';
+        content += '</div>';
+
         // update the musuemMarker infowindow
         uiModel.musemObjectWindow.setContent(content);
       };
 
       var closeMuseumObjectWindow = function() {
+        uiModel.musemObjectWindow.setContent('');
         uiModel.musemObjectWindow.close();
         uiModel.obsMusemObjectWindowVisible(false);
         uiModel.obsSelectedMusuemObjectPlace(false);
@@ -1464,7 +1505,9 @@ var museumApp = (function() {
         displayMarkersInBounds: displayMarkersInBounds,
         filterMarkersOnMap: filterMarkersOnMap,
         updateMapMarkerDisplay: updateMapMarkerDisplay,
-        objectPlaceListClick: objectPlaceListClick
+        objectPlaceListClick: objectPlaceListClick,
+        objectListClick: objectListClick,
+        updateMusemObjectInfoBoxContents: updateMusemObjectInfoBoxContents
       };
     }(mapHelpers);
     //  END mapHelpers MODULE
@@ -1607,12 +1650,14 @@ var museumApp = (function() {
         if (newMuseumMarkerObj) {
           // set style of map marker to 'selected'
           newMuseumMarkerObj.prefPlaceMarker.setIcon(mapHelpers.selectedPlacePinOptions());
+
           var VaMObjectPlacesData = newMuseumMarkerObj.VaM().place()[0];
-          // this is the total number of objectPlaces available from VaM (we may not have them all yet)
+
           var totalObjectPlacesAvailable = VaMObjectPlacesData.meta.result_count;
+          // this is the total number of objectPlaces available from VaM (we may not have them all yet)
           var numObjectPlaceRecords = VaMObjectPlacesData.records.length;
           //console.log('ADD ' + numObjectPlaceRecords + ' of ' + totalObjectPlacesAvailable + ' objectPlace markers to map');
-          // populate observable array with the currenly selected musuemMarkers musuem objetct places);
+          // populate observable array with the currenly selected musuemMarker - object places);
           uiModel.obsCurrentPlaceObjects(VaMObjectPlacesData.records);
         }
       }, null, "change");
@@ -1621,9 +1666,13 @@ var museumApp = (function() {
       // ON CHANGE obsSelectedMusuemObject
       // -------------------------------------------------------------------
       uiModel.obsSelectedMusuemObjectPlace.subscribe(function(newData) {
-        console.log('change obsSelectedMusuemObjectPlace');
-        // console.dir(newData);
+        console.log('changed obsSelectedMusuemObjectPlace');
 
+      }, null, "change");
+
+      uiModel.obsSelectedMusuemObject.subscribe(function(newDetailsObj) {
+        console.log('changed obsSelectedMusuemObject: ' + newDetailsObj.fields.materials_techniques);
+        mapHelpers.updateMusemObjectInfoBoxContents(newDetailsObj);
       }, null, "change");
 
       // for event AFTER filter input text has changed
