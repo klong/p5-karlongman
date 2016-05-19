@@ -52,8 +52,13 @@
         </div>
       </div>
       <!-- APP controls END -->
+
       <!-- MUSEUM MARKERS list START -->
       <div class="ui container results">
+        <div class="ui label large breadcrumb">
+          <a class="active section">Places</a>
+        </div>
+        <div class="ui divider"></div>
         <!-- map markers list -->
         <div class="ui very relaxed selection divided list">
           <!-- ko foreach: {data: mapsModel.obsFilteredBoundsMarkers, as: 'museumMarker'}-->
@@ -77,7 +82,11 @@
     <!-- MUSUEUM OBJECT PLACES list START -->
     <div id="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemObjectPlaces">
       <div class="ui container">
-        <h3 data-bind="text: uiModel.obsSelectedMusuemMarker().obsMuseumMarkerListLabel"></h3>
+        <div class="ui label large breadcrumb">
+          <a class="section">Places</a>
+          <i class="right chevron icon divider"></i>
+          <a class="active section" data-bind="text: uiModel.obsSelectedMusuemMarker().obsMuseumMarkerListLabel"></a>
+        </div>
         <div class="ui large very relaxed selection divided list">
           <!-- ko foreach: {data: uiModel.obsCurrentPlaceObjects, as: 'museumObjectPlace'}-->
           <div class="item" data-bind="click: $parent.mapHelpers.objectPlaceListClick.bind($data)">
@@ -92,8 +101,14 @@
   <!-- MUSUEUM OBJECT PLACES list END -->
   <!-- MUSUEUM OBJECTS list START -->
   <div id="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjects">
-    <div class="ui container" >
-      <h3 data-bind="text: uiModel.obsCurrentMuseumObjects().length + ' museum objects'" ></h3>
+    <div class="ui container">
+      <div class="ui label large breadcrumb">
+        <a class="section">Places</a>
+        <i class="right chevron icon divider"></i>
+        <a class="section" data-bind="text: uiModel.obsSelectedMusuemMarker().obsMuseumMarkerListLabel"></a>
+        <i class="right chevron icon divider"></i>
+        <div class="active section" data-bind="text: uiModel.obsCurrentMuseumObjects().length + ' museum objects'"></div>
+      </div>
       <div class="ui large very relaxed selection divided list">
         <!-- ko foreach: {data: uiModel.obsCurrentMuseumObjects, as: 'museumObject'}-->
         <div class="item" data-bind="click: $parent.mapHelpers.objectListClick.bind($data)">

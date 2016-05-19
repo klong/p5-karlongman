@@ -84,16 +84,16 @@ var museumApp = (function() {
       lng: -0.1308881999999585
     }
   }, {
-    name: "Oxford, UK",
-    location: {
-      lat: 51.7520209,
-      lng: -1.2577263000000585
-    }
-  }, {
     name: "Canterbury, Kent, UK",
     location: {
       lat: 51.280233,
       lng: 1.0789088999999876
+    }
+  }, {
+    name: "Worcester, Worcester, UK",
+    location: {
+      lat: 52.193636,
+      lng: -2.22157500000003
     }
   }];
 
@@ -273,8 +273,13 @@ var museumApp = (function() {
             museumCollectionType: resourceRefObj.modelCollection,
             museumData: museumDataResult
           };
+          //------------------------------------------------
+          // update the UI model
+          var museumObjects = museumDataResult.records;
+          museumApp.museumViewModel.vm.uiModel.obsCurrentMuseumObjects(museumObjects);
+          //------------------------------------------------
         } else if (musuemCollectionType === 'objectDetails') {
-          // update observable that is used for infobox contents
+          // update the UI model
           var objectDetails = museumDataResult[0];
           museumApp.museumViewModel.vm.uiModel.obsSelectedMusuemObject(objectDetails);
           // an object literal for 'objectDetails' musuemData
@@ -551,7 +556,7 @@ var museumApp = (function() {
         content: '',
         disableAutoPan: false,
         // maxWidth: 420,
-        pixelOffset: new google.maps.Size(-210, 70), // offset to show window below musuemMarker label
+        pixelOffset: new google.maps.Size(-150, 70), // offset to show window below musuemMarker label
         zIndex: null,
         // closeBoxMargin: "0 0 2px 2px",
         // closeBoxURL: "http://www.google.com/intl/en_us/mapfiles/close.gif",
@@ -580,13 +585,13 @@ var museumApp = (function() {
     uiModel.compShowMusuemObjectPlaces = ko.computed(function() {
       if (uiModel.obsInfowindowVisible()) {
         // infowindow is open
-        if (uiModel.obsMusemObjectWindowVisible()) {
+        if (uiModel.compShowMusuemObjects()) {
           console.log('1');
-          // and the 'MusemObjectWindow' is open, hide the 'museum object places' list
+          //  is set, so hide the 'museum object places' list
           return false;
         } else {
           console.log('2');
-          // when infowindow is open and 'MusemObjectWindow' is closed, show the 'museum object places' list
+          // when infowindow is open and obsSelectedMusuemObjectPlace is false, show the 'museum object places' list
           return true;
         }
       } else {
@@ -597,7 +602,7 @@ var museumApp = (function() {
     });
 
     uiModel.compShowMusuemObjects = ko.computed(function() {
-      if (uiModel.obsMusemObjectWindowVisible()) {
+      if (uiModel.obsSelectedMusuemObjectPlace()) {
         return true;
       } else {
         return false;
@@ -921,16 +926,15 @@ var museumApp = (function() {
         // set the uiModel state
         uiModel.obsSelectedMusuemObjectPlace(objectPlaceObj);
         //---------------------------
-        var selectedMuseumMarker = uiModel.obsSelectedMusuemMarker();
         // get museum data for objectPlace (from museumData or AJAX call)
-        museumDataHelpers.requestPlaceMusuemObjects(objectPlaceObj.pk, selectedMuseumMarker);
-        // open the musuemObject details window
-        openMuseumObjectWindow(selectedMuseumMarker);
+        museumDataHelpers.requestPlaceMusuemObjects(objectPlaceObj.pk, uiModel.obsSelectedMusuemMarker());
       };
 
       var objectListClick = function(museumObj) {
-        objectNumber = museumObj.fields.object_number;
-        museumDataHelpers.getmuseumObjectDetails(objectNumber);
+        museumObjectNumber = museumObj.fields.object_number;
+        museumDataHelpers.getmuseumObjectDetails(museumObjectNumber);
+        // open the musuemObject details window
+        openMuseumObjectWindow(museumObj);
       };
 
       var removeMarker = function(musuemMarker) {
@@ -1078,13 +1082,13 @@ var museumApp = (function() {
         musuemMarkerBounce(museumMarker);
       };
 
-      var openMuseumObjectWindow = function(museumMarker) {
-
+      var openMuseumObjectWindow = function() {
         // pan the map up by 1/3 of map height to show all infobox
-        panMapByPercentage(mapsModel.googleMap, 0, -0.4);
-        //-----------------------------------------------
-        // open musuemPlaceObjects window at map marker for obsSelectedMuseumMarker
-        uiModel.musemObjectWindow.open(mapsModel.googleMap, museumMarker.prefPlaceMarker);
+        //panMapByPercentage(mapsModel.googleMap, 0, -0.6);
+
+        // open musuemPlaceObjects window at map marker for obsSelectedMusuemMarker
+        uiModel.musemObjectWindow.open(mapsModel.googleMap, uiModel.obsSelectedMusuemMarker().prefPlaceMarker);
+        // infoBox is open : true
         uiModel.obsMusemObjectWindowVisible(true);
       };
 
@@ -1104,8 +1108,9 @@ var museumApp = (function() {
         if (details.image_set.length > 0) {
           var firstImage = details.image_set[0].fields.local;
           var noFileExtension = firstImage.substring(0, firstImage.length - 4);
-          // '_jpg_w.jpg' is VAM api - 265px square cropped version of image
+          // '_jpg_w.jpg' is VAM api - 265px square crop version of image
           var firstImageURL = "http://media.vam.ac.uk/media/thira/" + noFileExtension + '_jpg_w.jpg';
+          // var firstImageURL = "http://media.vam.ac.uk/media/thira/" + firstImage;
           return firstImageURL;
         } else {
           return false;
@@ -1113,25 +1118,50 @@ var museumApp = (function() {
       };
 
       var updateMusemObjectInfoBoxContents = function(objectDetails) {
-        var details = objectDetails.fields;
-        var primaryImageDiv = '';
-        var primaryImageURL = getPrimaryImageURL(objectDetails);
-        if (primaryImageURL) {
-          primaryImageDiv = '<div class="image"><img src="' + primaryImageURL + '"></div>';
-        }
         var content = '';
-        content += '<div class="ui card">';
-        content += primaryImageDiv;
-        content += '<div class ="content">';
-        content += ' <div class="header">' + details.object;
-        content += '  <div class="meta"><span class="date">' + details.date_text + '</span></div>';
-        content += '    <div class="description">' + details.public_access_description;
-        content += '     <p>' + details.public_access_description + '</p>';
-        content += '     <p>' + details.physical_description +'</p>';
-        content += '  </div>';
-        content += ' </div>';
-        content += '</div>';
-
+        if (objectDetails) {
+          var details = objectDetails.fields;
+          var primaryImageDiv = '';
+          var primaryImageURL = getPrimaryImageURL(objectDetails);
+          if (primaryImageURL) {
+            primaryImageDiv = '<div class="ui centered medium image"><img src="' + primaryImageURL + '"></div>';
+          }
+          var labelText = "";
+          if (details.label !== "") {
+            labelText = details.label;
+          } else {
+            labelText = details.descriptive_line;
+          }
+          content += '<div class="container">';
+          content += '<div class="ui card">';
+          content += '<div class="ui large label">' + labelText + '</div>';
+          content += primaryImageDiv;
+          content += '<div class="content">';
+          content += ' <div class="header">' + details.title;
+          content += '  <div class="meta"><span class="date">' + details.date_text + '</span><span>' + details.artist + '</span></div>';
+          content += '    <div class="description">';
+          content += '     <p>' + details.dimensions + '</p>';
+          content += '     <p>' + details.physical_description + '</p>';
+          content += '     <p>' + details.public_access_description + '</p>';
+          content += '  </div>';
+          content += ' </div>';
+          content += '</div>';
+          content += '<div class="extra content">';
+          content += '    <div class="description">';
+          content += '      <p>' + details.location + '</p>';
+          content += '    </div>';
+          content += '</div>';
+          content += '</div>';
+        } else {
+          content += '<div class="ui card">';
+          content += ' <div class="ui segment">';
+          content += '  <div class="ui active inverted dimmer">';
+          content += '   <div class="ui text loader">Loading</div>';
+          content += '  </div>';
+          content += ' </div>';
+          content += '</div>';
+          // object details are not ready yet
+        }
         // update the musuemMarker infowindow
         uiModel.musemObjectWindow.setContent(content);
       };
@@ -1141,6 +1171,8 @@ var museumApp = (function() {
         uiModel.musemObjectWindow.close();
         uiModel.obsMusemObjectWindowVisible(false);
         uiModel.obsSelectedMusuemObjectPlace(false);
+        uiModel.obsSelectedMusuemObject(false);
+        uiModel.obsCurrentMuseumObjects(false);
       };
 
       var closeInfoWindow = function() {
@@ -1215,11 +1247,6 @@ var museumApp = (function() {
           obsMuseumMarkerListLabel: ko.observable(false)
         };
 
-        // add click handler for marker
-        // marker.addListener('click', function(e) {
-        //   panMapToMuseumMarker(museumMarker); //TODO ??? maybe not
-        //   openInfoWindow(museumMarker);
-        // });
         marker.addListener('click', function(e) {
           panMapToMuseumMarker(museumMarker); //TODO ??? maybe not
           openInfoWindow(museumMarker);
@@ -1659,20 +1686,28 @@ var museumApp = (function() {
           //console.log('ADD ' + numObjectPlaceRecords + ' of ' + totalObjectPlacesAvailable + ' objectPlace markers to map');
           // populate observable array with the currenly selected musuemMarker - object places);
           uiModel.obsCurrentPlaceObjects(VaMObjectPlacesData.records);
+        } else {
+          console.log('now');
+          uiModel.obsCurrentPlaceObjects(false);
         }
       }, null, "change");
 
       // -------------------------------------------------------------------
       // ON CHANGE obsSelectedMusuemObject
       // -------------------------------------------------------------------
-      uiModel.obsSelectedMusuemObjectPlace.subscribe(function(newData) {
-        console.log('changed obsSelectedMusuemObjectPlace');
-
+      uiModel.obsSelectedMusuemObjectPlace.subscribe(function(newPlaceObj) {
+        if (newPlaceObj !== false) {
+          console.log('obsSelectedMusuemObjectPlace:');
+          console.dir(newPlaceObj);
+        } else {
+          console.log('obsSelectedMusuemObjectPlace: False');
+        }
       }, null, "change");
 
       uiModel.obsSelectedMusuemObject.subscribe(function(newDetailsObj) {
-        console.log('changed obsSelectedMusuemObject: ' + newDetailsObj.fields.materials_techniques);
-        mapHelpers.updateMusemObjectInfoBoxContents(newDetailsObj);
+        if (newDetailsObj !== false) {
+          mapHelpers.updateMusemObjectInfoBoxContents(newDetailsObj);
+        }
       }, null, "change");
 
       // for event AFTER filter input text has changed
@@ -1731,7 +1766,7 @@ $(function() {
   // set height of map area to 50% of the current document height
   // hack to get google map bug to display as div will
   // have 0 height if div id map is not set
-  var halfDocumentHeight = ($(window).height() / 2);
+  var halfDocumentHeight = ($(window).height() / 1.7);
   $('#map').height(halfDocumentHeight);
   $('#map').css('visibility', 'visible');
 });
