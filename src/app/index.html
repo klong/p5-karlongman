@@ -37,7 +37,7 @@
       <div class="ui segment map-view" id="map" data-bind="mapPanel"></div>
     </div>
     <!-- MAP area END -->
-    <div id="searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList">
+    <div id="searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList()">
       <!-- APP controls START -->
       <div class="ui stackable map-controls-area">
         <div class="ui buttons">
@@ -52,13 +52,8 @@
         </div>
       </div>
       <!-- APP controls END -->
-
       <!-- MUSEUM MARKERS list START -->
       <div class="ui container results">
-        <div class="ui label large breadcrumb">
-          <a class="active section">Places</a>
-        </div>
-        <div class="ui divider"></div>
         <!-- map markers list -->
         <div class="ui very relaxed selection divided list">
           <!-- ko foreach: {data: mapsModel.obsFilteredBoundsMarkers, as: 'museumMarker'}-->
@@ -80,18 +75,20 @@
     </div>
     <!-- MUSEUM MARKERS list END -->
     <!-- MUSUEUM OBJECT PLACES list START -->
-    <div id="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemObjectPlaces">
+    <div id="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemPlaceList()">
       <div class="ui container">
-        <div class="ui label large breadcrumb">
-          <a class="section">Places</a>
+        <div class="ui divider"></div>
+        <div class="ui small breadcrumb">
+          <a class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">Places</a>
           <i class="right chevron icon divider"></i>
-          <a class="active section" data-bind="text: uiModel.obsSelectedMusuemMarker().obsMuseumMarkerListLabel"></a>
+          <a class="active section" data-bind="text: uiModel.compMuseumMarkerCrumb, click: museumDataHelpers.clearSelectedObjectPlace"></a>
         </div>
+        <div class="ui divider"></div>
         <div class="ui large very relaxed selection divided list">
           <!-- ko foreach: {data: uiModel.obsCurrentPlaceObjects, as: 'museumObjectPlace'}-->
           <div class="item" data-bind="click: $parent.mapHelpers.objectPlaceListClick.bind($data)">
             <div class="header" data-bind="text: museumObjectPlace.fields.name"></div>
-            <div class="description" data-bind="visible: museumObjectPlace.fields.museumobject_count, text: museumObjectPlace.fields.museumobject_count"></div>
+            <div class="description" data-bind="visible: museumObjectPlace.fields.museumobject_count, text: museumObjectPlace.fields.museumobject_count + ' museum Objects'"></div>
           </div>
           <!-- /ko -->
         </div>
@@ -100,19 +97,22 @@
   </div>
   <!-- MUSUEUM OBJECT PLACES list END -->
   <!-- MUSUEUM OBJECTS list START -->
-  <div id="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjects">
+  <div id="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjectsList()">
     <div class="ui container">
-      <div class="ui label large breadcrumb">
-        <a class="section">Places</a>
+      <div class="ui divider"></div>
+      <div class="ui small breadcrumb">
+        <a class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">Places</a>
         <i class="right chevron icon divider"></i>
-        <a class="section" data-bind="text: uiModel.obsSelectedMusuemMarker().obsMuseumMarkerListLabel"></a>
+        <a class="section" data-bind="text: uiModel.compMuseumMarkerCrumb, click: museumDataHelpers.clearSelectedObjectPlace"></a>
         <i class="right chevron icon divider"></i>
-        <div class="active section" data-bind="text: uiModel.obsCurrentMuseumObjects().length + ' museum objects'"></div>
+        <a class="active section" data-bind="text: uiModel.compObjectPlaceCrumb"></a>
+        <i class="right chevron icon divider"></i>
       </div>
+      <div class="ui divider"></div>
       <div class="ui large very relaxed selection divided list">
         <!-- ko foreach: {data: uiModel.obsCurrentMuseumObjects, as: 'museumObject'}-->
         <div class="item" data-bind="click: $parent.mapHelpers.objectListClick.bind($data)">
-          <img class="ui tiny image" src="../img/VandA_logo1-120x35.jpg" alt="no image" data-bind="attr:{src: museumObject.imageURL, alt: museumObject.fields.object}">
+          <img class="ui tiny image" src="img/VandA_logo1-120x35.jpg" alt="Victoria and Albert Museum logo" data-bind="attr:{src: museumObject.imgURL, alt: museumObject.fields.object}">
           <div class="header" data-bind="text: museumObject.fields.title"></div>
           <div class="description" data-bind="text: museumObject.fields.object + ' ' + museumObject.fields.artist + ' ' + museumObject.fields.year_start"></div>
         </div>
@@ -121,6 +121,50 @@
     </div>
   </div>
   <!-- MUSUEUM OBJECTS list END -->
+  <!-- MUSUEUM OBJECT DETAILS div START -->
+  <div id="musuemObjectsDetails" data-bind="visible: uiModel.obsSelectedMusuemObject()">
+    <div class="ui container">
+      <div class="ui divider"></div>
+      <div class="ui small breadcrumb">
+        <a class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">Places</a>
+        <i class="right chevron icon divider"></i>
+        <a class="section" data-bind="text: uiModel.compMuseumMarkerCrumb, click: museumDataHelpers.clearSelectedObjectPlace"></a>
+        <i class="right chevron icon divider"></i>
+        <a class="section" data-bind="text: uiModel.compObjectPlaceCrumb, click: museumDataHelpers.clearSelectedMusuemObject"></a>
+        <i class="right chevron icon divider"></i>
+        <div class="active section" data-bind="text: uiModel.compMusuemObjectCrumb"></div>
+      </div>
+      <div class="ui divider"></div>
+      <!-- ko foreach: {data: uiModel.obsSelectedMusuemObject, as: 'selectedObj'}-->
+      <div class="container">
+          <!-- ko foreach: {data: selectedObj.fields.image_set, as: 'imageInSet'}-->
+          <img class="ui centered fluid rounded image" src='../img/VandA_logo1-120x35.jpg' alt='none' data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}"/>
+          <!-- /ko -->
+        <div class="ui segment">
+          <h3 data-bind="text: selectedObj.fields.materials_techniques"></h3>
+          <div class="content">
+            <div class="header">
+              <h4 data-bind="html: selectedObj.fields.artist"></h4>
+              <div class="meta"><span class="date" data-bind="text: selectedObj.fields.date_text"></span></div>
+              <div class="description">
+                <p data-bind="html: selectedObj.fields.dimensions"></p>
+                <p data-bind="html: selectedObj.fields.physical_description"></p>
+                <p data-bind="html: selectedObj.fields.public_access_description"></p>
+              </div>
+            </div>
+          </div>
+          <div class="ui divider"></div>
+          <div class="extra content">
+            <div class="description">
+              <div class="ui label" data-bind="text: selectedObj.fields.location"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /ko -->
+    </div>
+  </div>
+  <!-- MUSUEUM OBJECT DETAILS div END -->
   <!-- MUSEUM APP content - END -->
 
   <!-- DEBUG LIST START -->
