@@ -1,4 +1,5 @@
 
+
 html, body {
   width: 100%;
   height: 100%;
@@ -11,6 +12,10 @@ body {
   font-family: 'Noticia Text', serif;
   font-style: normal;
   font-weight: 400;
+}
+
+body.initial-hide #musuemObjectsList, body.initial-hide #musuemObjectPlaceList, body.initial-hide #searchResultsList, body.initial-hide #musuemObjectsDetails, body.initial-hide #debugList {
+  display: none;
 }
 
 p.weight1 {
