@@ -62,27 +62,6 @@ p.weight3 {
   width: 300px;
 }
 
-/*.gm-style-iw {
-  height: 150px;
-  width: 500px;
-}*/
-
-/*.glasspane {
-  background-color: rgba(255, 255, 255, 0.75);
-  position: absolute;
-  left: 45%;
-  top: 380px;
-  padding: 12px;
-  font-family: Droid Sans, Arial, Helvetica, sans-serif;
-  font-weight: bold;
-  font-size: 12px;
-  cursor: pointer;
-  box-shadow: rgba(0, 0, 0, 0.3) 3px 3px 8px;
-  border-radius: 10px;
-  border-style: solid;
-
-}*/
-
 .controls {
   margin-top: 8px;
   border: 1px solid transparent;
@@ -100,9 +79,9 @@ p.weight3 {
   border-top: 20px;
 }
 
-.loading-screen {
+/*.loading-screen {
   display: none;
-}
+}*/
 
 .resultsArea {
   background-color: snow;
@@ -129,6 +108,14 @@ p.weight3 {
   font-weight: 700;
   font-style: italic;
   font-size: 14px;
+  line-height: 22px;
+}
+
+.label-vam {
+  font-family: "Noticia Text";
+  font-weight: 500;
+  font-style: italic;
+  font-size: 12px;
   line-height: 22px;
 }
 

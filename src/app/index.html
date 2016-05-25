@@ -45,7 +45,7 @@
       </div>
     </div>
     <!-- APP controls END -->
-    <div id="searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList()">  
+    <div id="searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList()">
       <!-- MUSEUM MARKERS list START -->
       <div id="mapMarkersList" class="ui container results">
         <!-- map markers list -->
@@ -137,9 +137,9 @@
       <div class="ui divider"></div>
       <!-- ko foreach: {data: uiModel.obsSelectedMusuemObject, as: 'selectedObj'}-->
       <div class="container">
-          <!-- ko foreach: {data: selectedObj.fields.image_set, as: 'imageInSet'}-->
-          <img class="ui centered fluid rounded image" width="70" height="70" src='../img/VandA_logo1-120x35.jpg' alt='none' data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}"/>
-          <!-- /ko -->
+        <!-- ko foreach: {data: selectedObj.fields.image_set, as: 'imageInSet'}-->
+        <img class="ui centered fluid rounded image" width="70" height="70" src='../img/VandA_logo1-120x35.jpg' alt='none' data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}"/>
+        <!-- /ko -->
         <div class="ui segment">
           <h3 data-bind="text: selectedObj.fields.materials_techniques"></h3>
           <div class="content">
@@ -150,16 +150,13 @@
                 <p data-bind="html: selectedObj.fields.dimensions"></p>
                 <p data-bind="html: selectedObj.fields.physical_description"></p>
                 <p data-bind="html: selectedObj.fields.public_access_description"></p>
+                <p class="ui label" data-bind="text: selectedObj.fields.location"></p>
               </div>
+              <div class="ui divider"></div>
+              <p class="label-vam"><a href="http://collections.vam.ac.uk/information/information_apiterms" target="_blank">Content provided by Victoria and Albert Museum collections API</a></p>
+            </div>
             </div>
           </div>
-          <div class="ui divider"></div>
-          <div class="extra content">
-            <div class="description">
-              <div class="ui label" data-bind="text: selectedObj.fields.location"></div>
-            </div>
-          </div>
-        </div>
       </div>
       <!-- /ko -->
     </div>

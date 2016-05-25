@@ -292,7 +292,7 @@ var museumApp = (function() {
           // strip out any images in image_set that have no path
           var imageArray = objectDetails.fields.image_set;
           filteredArray = imageArray.filter(function(imageDetails) {
-            // keep images that have a local path that is not an empty string
+            // keep imageDetails that have a local path that is not an empty string
             return (imageDetails.fields.local !== "");
           });
           // update the UI model
@@ -558,12 +558,18 @@ var museumApp = (function() {
 
     uiModel.compShowMusuemPlaceList = ko.computed(function() {
       if (!uiModel.compShowMusuemMarkersList()) {
-        // the musuem places list is hidden
+        if (uiModel.obsCurrentPlaceObjects() === false) {
+          // museum marker has no object places so unselect the marker
+          // to reshow the map marker list
+          museumDataHelpers.clearSelectedMusuemMarker();
+          return false;
+        }
+        // when the musuem places list is hidden
         if (uiModel.obsSelectedMusuemObjectPlace()) {
           // hide if we select a place from this list
           return false;
         } else {
-          // show places list when no selected place
+          // show places list when obsSelectedMusuemObjectPlace is false
           return true;
         }
       } else {
@@ -1330,14 +1336,13 @@ var museumApp = (function() {
               if (musMarkerforPlace !== false) {
                 // museum marker already exists for bestplace
                 panMapToMuseumMarker(musMarkerforPlace);
-                console.log('marker already exits for ' + bestPlace.formatted_address);
               } else {
                 // create a new museumMarker for the bestPlace
                 var museumMarker = makeMuseumMarker(bestPlace);
                 // clear map filter if present
-                // if (mapsModel.obsFilterSearch !== '') {
-                //   museumDataHelpers.clearFilter();
-                // }
+                if (mapsModel.obsFilterSearch !== '') {
+                  museumDataHelpers.clearFilter();
+                }
                 //-------------------------------------------------------------------------
                 // async request V&A museum place search results
                 //-------------------------------------------------------------------------
@@ -1619,22 +1624,24 @@ var museumApp = (function() {
             mapsModel.obsFilteredBoundsMarkers(mapHelpers.displayMarkersInBounds());
             mapHelpers.markerLabelsDisplay();
           });
+
           // map zoom event handler
           map.addListener('zoom_changed', function() {
             mapsModel.obsFilteredBoundsMarkers(mapHelpers.displayMarkersInBounds());
             mapHelpers.markerLabelsDisplay();
           });
+
           // map double click event handler
           google.maps.event.addListener(mapsModel.googleMap, 'dblclick', function(event) {
             museumDataHelpers.clearSelectedMusuemMarker();
-            // clear place filter if active
-            // TODO could check if new place would be allowed in filter
+            // clear place filter if active TODO could check if new place would be allowed in filter
             museumDataHelpers.clearFilter();
-            // do the best place search
+            // do a 'best place' google search
             mapHelpers.searchHere(event.latLng);
             // hide the help caption at top te app
             uiModel.obsHelpVisible(false);
           });
+
           // browser window resize event handler
           google.maps.event.addDomListener(window, "resize", function() {
             var halfDocumentHeight = ($(window).height() / 2);
