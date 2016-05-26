@@ -14,7 +14,7 @@ body {
   font-weight: 400;
 }
 
-body.initial-hide #musuemObjectsList, body.initial-hide #musuemObjectPlaceList, body.initial-hide #searchResultsList, body.initial-hide #musuemObjectsDetails, body.initial-hide #debugList {
+body.initial-hide #musuemObjectsList, body.initial-hide #topbar, body.initial-hide #appControls, body.initial-hide #musuemObjectPlaceList, body.initial-hide #searchResultsList, body.initial-hide #musuemObjectsDetails, body.initial-hide #debugList {
   display: none;
 }
 
@@ -47,13 +47,21 @@ p.weight3 {
   background-color: snow;
   height: 200px;
 }
+
+.loader-area {
+  width:auto;
+  height: 280px;
+}
+
 .map-view {
+  padding: 0;
   visibility: hidden;
   height: 100%;
   width: 100%;
 
 }
 .map-container {
+  padding: 0;
   height: 100%;
   width: 100%;
 }
@@ -78,10 +86,6 @@ p.weight3 {
   margin-bottom: 10px;
   border-top: 20px;
 }
-
-/*.loading-screen {
-  display: none;
-}*/
 
 .resultsArea {
   background-color: snow;
