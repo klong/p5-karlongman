@@ -1,4 +1,4 @@
-/**
+/*!
  * @name MarkerWithLabel for V3
  * @version 1.1.9 [June 30, 2013]
  * @author Gary Little (inspired by code from Marc Ridey of Google).
@@ -585,4 +585,4 @@ MarkerWithLabel.prototype.setMap = function (theMap) {
   this.label.setMap(theMap);
 };
 
-module.exports = MarkerWithLabel;
+// module.exports = MarkerWithLabel;

@@ -36,30 +36,33 @@ var museumApp = (function() {
   // initAppLibs array defines external script need before our app can run
   //----------------------------------------------------------------------------
   var initAppLibs = [{
-    // markerwithlabel.js library
-    name: 'MarkerWithLabel',
-    dataType: 'script',
-    url: 'https://cdn.rawgit.com/googlemaps/v3-utility-library/master/markerwithlabel/src/markerwithlabel.js',
-    isLoaded: 'no',
-    libraryTest: 'functionTest',
-    isReady: false
-  }, {
     // google maps infobox api
     name: 'InfoBox',
     dataType: 'script',
-    url: 'https://cdn.rawgit.com/googlemaps/v3-utility-library/master/infobox/src/infobox.js',
+    // url: 'https://cdn.rawgit.com/googlemaps/v3-utility-library/master/infobox/src/infobox.js',
+    url: 'js/library/infobox.js',
     isLoaded: 'no',
     libraryTest: 'functionTest',
     isReady: false
-  }, {
+  },  {
     // knockout.js library
     name: 'ko',
     dataType: 'script',
-    url: 'https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js',
+    // url: 'https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js',
+    url: 'js/library/knockout.js',
     isLoaded: 'no',
     libraryTest: 'objectTest',
     isReady: false
-  }];
+  }, {
+    // MarkerWithLabel.js library
+    name: 'MarkerWithLabel',
+    dataType: 'script',
+    // url: 'https://cdn.rawgit.com/googlemaps/v3-utility-library/master/markerwithlabel/src/markerwithlabel.js',
+    url: 'js/library/MarkerWithLabel.js',
+    isLoaded: 'no',
+    libraryTest: 'functionTest',
+    isReady: false
+  },];
 
   //-------------------------------------------------------------------------
   // initmuseumPlaces defines the search locations for default museumMarkers
@@ -1903,11 +1906,5 @@ $(function() {
   $('#map').height(halfDocumentHeight);
   $('#map').css('visibility', 'visible');
 });
-
-// this callback is called when google maps is ready
-window.mapsCallback = function() {
-"use strict";
-  museumApp.init();
-};
 
 //---------------------------------------------------------

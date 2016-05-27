@@ -17,7 +17,8 @@
   <!-- MUSEUM APP loading screen - START -->
   <div id="loadingArea" class="container">
     <div class="ui loading circular inverted segment loader-area">
-      <div class="ui header"><h3>Loading Neighborhood map</h3></div>
+      <div class="ui header">
+        <h3>Loading Neighborhood map</h3></div>
     </div>
   </div>
   <!-- MUSEUM APP loading screen - END -->
@@ -79,7 +80,9 @@
       <div class="ui container">
         <div class="ui divider"></div>
         <div class="ui large breadcrumb">
-          <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker"><div class="ui basic label">Places</div></div>
+          <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
+            <div class="ui basic label">Places</div>
+          </div>
           <i class="orange arrow right icon"></i>
           <div class="active section" data-bind="text: uiModel.compMuseumMarkerCrumb, click: museumDataHelpers.clearSelectedObjectPlace"></div>
         </div>
@@ -106,17 +109,22 @@
     <div class="ui container">
       <div class="ui divider"></div>
       <div class="ui large breadcrumb">
-        <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker"><div class="ui basic label">Places</div></div>
+        <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
+          <div class="ui basic label">Places</div>
+        </div>
         <i class="orange arrow right icon"></i>
-        <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace"><div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div></div>
+        <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
+          <div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div>
+        </div>
         <i class="orange arrow right icon"></i>
         <div class="active section" data-bind="visible: uiModel.obsCurrentMuseumObjects().length > 0, text: uiModel.compObjectPlaceCrumb"></div>
+        <i class="ui tiny orange exchange icon" data-bind="visible: museumDataHelpers.loadMorePlacesVisible"></i>
         <div class="ui mini blue button" data-bind="visible: museumDataHelpers.loadMorePlacesVisible, click: museumDataHelpers.loadMorePlaceObjects"><i class="refresh icon"></i> load 45 more objects</div>
       </div>
       <div class="ui large middle aligned selection divided list">
         <!-- ko foreach: {data: uiModel.obsCurrentMuseumObjects, as: 'museumObject'}-->
         <div class="item" data-bind="click: $parent.mapHelpers.objectListClick.bind($data)">
-          <img class="tiny rounded image item" width="70" height="70" src="img/VandA_logo1-120x35.jpg" alt="Victoria and Albert Museum logo" data-bind="attr:{src: museumObject.imgURL, alt: museumObject.fields.object}">
+          <img class="tiny rounded image item" width="70" height="70" src="img/VandA_logo70x70.png" alt="Victoria and Albert Museum logo" data-bind="attr:{src: museumObject.imgURL, alt: museumObject.fields.object}">
           <div class="content">
             <div class="header" data-bind="text: museumObject.fields.title"></div>
             <div class="description">
@@ -134,11 +142,17 @@
     <div class="ui container">
       <div class="ui divider"></div>
       <div class="ui large breadcrumb">
-        <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker"><div class="ui basic label">Places</div></div>
+        <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
+          <div class="ui basic label">Places</div>
+        </div>
         <i class="orange arrow right icon"></i>
-        <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace"><div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div></div>
+        <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
+          <div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div>
+        </div>
         <i class="orange arrow right icon"></i>
-        <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemObject"><div class="ui basic label" data-bind="text: uiModel.compObjectPlaceCrumb"></div></div>
+        <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemObject">
+          <div class="ui basic label" data-bind="text: uiModel.compObjectPlaceCrumb"></div>
+        </div>
         <i class="orange arrow right icon"></i>
         <div class="active section" data-bind="text: uiModel.compMusuemObjectCrumb"></div>
       </div>
@@ -146,7 +160,7 @@
       <!-- ko foreach: {data: uiModel.obsSelectedMusuemObject, as: 'selectedObj'}-->
       <div class="container">
         <!-- ko foreach: {data: selectedObj.fields.image_set, as: 'imageInSet'}-->
-        <img class="ui centered fluid rounded image" width="70" height="70" src='../img/VandA_logo1-120x35.jpg' alt='none' data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}" />
+        <img class="ui centered fluid rounded image" width="70" height="70" src='../img/VandA_logo70x70.png' alt='none' data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}" />
         <!-- /ko -->
         <div class="ui segment">
           <h3 data-bind="text: selectedObj.fields.materials_techniques"></h3>
@@ -193,6 +207,12 @@
   <!-- APP SCRIPTS -->
   <script src="js/library/semantic.js"></script>
   <script src="js/app.js"></script>
+  <script type="text/javascript">
+    // this callback is called when google maps is ready
+    window.mapsCallback = function() {
+      museumApp.init();
+    };
+  </script>
 </body>
 
 </html>
