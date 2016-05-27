@@ -2,6 +2,7 @@
 .DS_Store
 node_modules
 src/bower_components
+*.log
 
 # Don't track build output
 dist/

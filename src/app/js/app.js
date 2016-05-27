@@ -281,7 +281,7 @@ var museumApp = (function() {
         } else if (musuemCollectionType === 'placeObjects') {
           // add an external imageURL for each museumObject in the museumDataResult
           // when its 'primary_image_id' field is "" we use a deafault image thumbnail
-          var museumImgURL = museumApp.museumViewModel.vm.museumDataHelpers.setThumbImagePath(museumDataResult);
+          museumApp.museumViewModel.vm.museumDataHelpers.setThumbImagePath(museumDataResult);
           // an object literal for 'placeObjects' musuemData
           museumCollectionDataObj = {
             resourceRefObj: resourceRefObj,
@@ -397,7 +397,7 @@ var museumApp = (function() {
           label = 'sorry no musuem places';
         } else if (numMusuemObjects === maxNumObjectPlaces) {
           label = numMusuemObjects + " museum place";
-        } else if (numMusuemObjects == 1) {
+        } else if (numMusuemObjects === 1) {
           label = numMusuemObjects + " museum place";
         } else if (numMusuemObjects > 1) {
           label = numMusuemObjects + ' of ' + maxNumObjectPlaces + " museum place";
@@ -562,7 +562,7 @@ var museumApp = (function() {
           } else {
             rightName = rightMarker.bestPlace.address_components[0].long_name.split(' ')[0].toLowerCase();
           }
-          return leftName == rightName ? 0 : (leftName < rightName ? -1 : 1);
+          return leftName === rightName ? 0 : (leftName < rightName ? -1 : 1);
         });
         return sortedArray;
       } else {
@@ -856,7 +856,6 @@ var museumApp = (function() {
 
       var loadMorePlaceObjects = function() {
         if (uiModel.obsSelectedMusuemObjectPlace()) {
-          var museumPlaceObj = uiModel.obsSelectedMusuemObjectPlace();
           var placePrimaryKey = uiModel.obsSelectedMusuemObjectPlace().pk;
           requestPlaceMusuemObjects(placePrimaryKey, uiModel.obsSelectedMusuemMarker());
         }
@@ -1462,7 +1461,7 @@ var museumApp = (function() {
         var musMarkerArray = mapsModel.obsArrayMapMarkers();
         // check if new best place google ID is within an existing marker
         for (var count = 0; count < musMarkerArray.length; count++) {
-          if (musMarkerArray[count].bestPlace.place_id == testPlace.place_id) {
+          if (musMarkerArray[count].bestPlace.place_id === testPlace.place_id) {
             // return the museumMarker Object if place_id matches
             return musMarkerArray[count];
           }
@@ -1497,15 +1496,15 @@ var museumApp = (function() {
           numPaths, p, path, numPoints,
           i, j, vertex1, vertex2;
         // Arguments are a pair of lat, lng variables
-        if (arguments.length == 2) {
+        if (arguments.length === 2) {
           if (
-            typeof arguments[0] == "number" &&
-            typeof arguments[1] == "number"
+            typeof arguments[0] === "number" &&
+            typeof arguments[1] === "number"
           ) {
             lat = arguments[0];
             lng = arguments[1];
           }
-        } else if (arguments.length == 1) {
+        } else if (arguments.length === 1) {
           bounds = this.getBounds();
           if (!bounds && !bounds.contains(latLng)) {
             return false;
@@ -1621,7 +1620,6 @@ var museumApp = (function() {
     // try and retrieve the users GEOLOCATION and then upscale to a preferred google place
     var getUsersLocalPlace = function() {
       if ("geolocation" in navigator) {
-        var startPos;
         var geoOptions = {
           maximumAge: 10 * 60 * 1000, // debug option: will return quicker if geoloc has been run in last 10mins
           timeout: 15 * 1000 // timeout call if over 15 secs and no success
@@ -1897,6 +1895,7 @@ var museumApp = (function() {
 // JQuery document is ready function
 //-----------------------------------
 $(function() {
+  "use strict";
   // set height of map area to 50% of the current document height
   // hack to get google map bug to display as div will
   // have 0 height if div id map is not set
@@ -1907,6 +1906,7 @@ $(function() {
 
 // this callback is called when google maps is ready
 window.mapsCallback = function() {
+"use strict";
   museumApp.init();
 };
 

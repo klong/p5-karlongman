@@ -110,8 +110,8 @@
         <i class="orange arrow right icon"></i>
         <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace"><div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div></div>
         <i class="orange arrow right icon"></i>
-        <div class="active section" data-bind="visible: uiModel.obsCurrentMuseumObjects().length > 0"><div class="ui basic label" data-bind="text: uiModel.compObjectPlaceCrumb"></div></div>
-        <div class="ui mini button" data-bind="visible: museumDataHelpers.loadMorePlacesVisible, click: museumDataHelpers.loadMorePlaceObjects"><i class="refresh icon"></i> load 45 more objects</div>
+        <div class="active section" data-bind="visible: uiModel.obsCurrentMuseumObjects().length > 0, text: uiModel.compObjectPlaceCrumb"></div>
+        <div class="ui mini blue button" data-bind="visible: museumDataHelpers.loadMorePlacesVisible, click: museumDataHelpers.loadMorePlaceObjects"><i class="refresh icon"></i> load 45 more objects</div>
       </div>
       <div class="ui large middle aligned selection divided list">
         <!-- ko foreach: {data: uiModel.obsCurrentMuseumObjects, as: 'museumObject'}-->
