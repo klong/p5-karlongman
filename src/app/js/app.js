@@ -44,7 +44,7 @@ var museumApp = (function() {
     isLoaded: 'no',
     libraryTest: 'functionTest',
     isReady: false
-  },  {
+  }, {
     // knockout.js library
     name: 'ko',
     dataType: 'script',
@@ -62,7 +62,7 @@ var museumApp = (function() {
     isLoaded: 'no',
     libraryTest: 'functionTest',
     isReady: false
-  },];
+  }, ];
 
   //-------------------------------------------------------------------------
   // initmuseumPlaces defines the search locations for default museumMarkers
@@ -1897,8 +1897,14 @@ var museumApp = (function() {
 //-----------------------------------
 // JQuery document is ready function
 //-----------------------------------
-$(function() {
-  "use strict";
+$(document).ready(function() {
+  var s = document.createElement("script");
+  s.type = "text/javascript";
+  s.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyCRpuFnelWb6VGyKNtMyUbKopJC-1anU7g&callback=window.gmap_draw";
+  window.gmap_draw = function() {
+    museumApp.init();
+  };
+  $("head").append(s);
   // set height of map area to 50% of the current document height
   // hack to get google map bug to display as div will
   // have 0 height if div id map is not set

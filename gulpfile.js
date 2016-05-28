@@ -318,4 +318,4 @@ gulp.task('serve:dist', ['browserSync:dist', 'watch']);
 
 // default task - run with command 'gulp'
 
-gulp.task('default', ['browserSync:dist', 'watch']);
+gulp.task('default', ['browserSync:dev', 'watch']);
