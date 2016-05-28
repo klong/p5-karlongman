@@ -40,7 +40,7 @@ var museumApp = (function() {
     name: 'InfoBox',
     dataType: 'script',
     // url: 'https://cdn.rawgit.com/googlemaps/v3-utility-library/master/infobox/src/infobox.js',
-    url: 'js/library/infobox.js',
+    url: 'js/library/InfoBox.js',
     isLoaded: 'no',
     libraryTest: 'functionTest',
     isReady: false

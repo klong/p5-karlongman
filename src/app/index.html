@@ -160,7 +160,7 @@
       <!-- ko foreach: {data: uiModel.obsSelectedMusuemObject, as: 'selectedObj'}-->
       <div class="container">
         <!-- ko foreach: {data: selectedObj.fields.image_set, as: 'imageInSet'}-->
-        <img class="ui centered fluid rounded image" width="70" height="70" src='../img/VandA_logo70x70.png' alt='none' data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}" />
+        <img class="ui centered fluid rounded image" width="70" height="70" src='img/VandA_logo70x70.png' alt='none' data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}" />
         <!-- /ko -->
         <div class="ui segment">
           <h3 data-bind="text: selectedObj.fields.materials_techniques"></h3>
