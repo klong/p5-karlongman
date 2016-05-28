@@ -54,7 +54,7 @@ type:
 
 you should see something like this:
 
-<img src="/Users/grover/GIT-REPOS/p5-karlongman/screenShots/NeighbourhoodMap01.jpg" width="1140" height="1195" />
+<img src="https://cloud.githubusercontent.com/assets/131895/15627953/239e1c24-24ec-11e6-86cc-cde545f56211.jpg" width="1140" height="1195" />
 
 
 the page should pop-up itself, but if you have problems, use a **google chrome browser** and visit page:
