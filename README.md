@@ -54,7 +54,7 @@ type:
 
 you should see something like this:
 
-<img src="https://cloud.githubusercontent.com/assets/131895/15627953/239e1c24-24ec-11e6-86cc-cde545f56211.jpg" width="1140" height="1195" />
+<img src="https://cloud.githubusercontent.com/assets/131895/15627991/f16d22ee-24ec-11e6-8a90-54f40aff43e8.jpg" width="684" height="717" />
 
 
 the page should pop-up itself, but if you have problems, use a **google chrome browser** and visit page:
