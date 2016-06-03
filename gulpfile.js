@@ -71,6 +71,17 @@ gulp.task('fonts', function() {
     }));
 });
 
+gulp.task('concatScripts', function(){
+    return gulp.src(['src/app/js/ddd.js', 'src/app/js/file1.js', 'src/app/js/file2.js', 'src/app/js/file3.js'])
+        .pipe(plugins.sourcemaps.init())
+        .pipe(plugins.concat('concat.js'))
+        .pipe(gulp.dest(dist.scripts))
+        .pipe(plugins.rename('uglify.js'))
+        .pipe(plugins.uglify())
+        .pipe(plugins.sourcemaps.write('./'))
+        .pipe(gulp.dest(dist.scripts));
+});
+
 // images task
 
 // gulp.task('images', function () {

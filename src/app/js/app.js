@@ -113,7 +113,7 @@ var museumApp = (function() {
       } catch (exception) {}
     }() && localStorage;
     return storage;
-  };
+   };
 
   var makeInitMapmuseumData = function() {
     var initData = initmuseumPlaces;
@@ -1241,16 +1241,16 @@ var museumApp = (function() {
         uiModel.musemObjectWindow.setContent(errorText);
       };
 
-      var panMapByPercentage = function(mapRef, offsetX, offsetY) {
-        // http://stackoverflow.com/questions/10656743/how-to-offset-the-center-point-in-google-maps-api-v3
-        var center = mapRef.getCenter(); // a latLng
-        var span = mapRef.getBounds().toSpan(); // a latLng - # of deg map spans
-        var newCenter = {
-          lat: center.lat() + span.lat() * offsetY,
-          lng: center.lng() + span.lng() * offsetX
-        };
-        mapRef.panTo(newCenter);
-      };
+      // var panMapByPercentage = function(mapRef, offsetX, offsetY) {
+      //   // http://stackoverflow.com/questions/10656743/how-to-offset-the-center-point-in-google-maps-api-v3
+      //   var center = mapRef.getCenter(); // a latLng
+      //   var span = mapRef.getBounds().toSpan(); // a latLng - # of deg map spans
+      //   var newCenter = {
+      //     lat: center.lat() + span.lat() * offsetY,
+      //     lng: center.lng() + span.lng() * offsetX
+      //   };
+      //   mapRef.panTo(newCenter);
+      // };
 
       var updateMusemObjectInfoBoxContents = function(objectDetails) {
         var content = '';
@@ -1582,7 +1582,7 @@ var museumApp = (function() {
       var updateMapMarkerDisplay = function() {
         filterMarkersOnMap();
         markerLabelsDisplay();
-        displayMarkersInBounds();
+        //displayMarkersInBounds();
       };
 
       //-----------------------------------------------------
@@ -1689,13 +1689,13 @@ var museumApp = (function() {
 
           // map bounds_changed event handler
           map.addListener('bounds_changed', function() {
-            mapsModel.obsFilteredBoundsMarkers(mapHelpers.displayMarkersInBounds());
+            // mapsModel.obsFilteredBoundsMarkers(mapHelpers.displayMarkersInBounds());
             mapHelpers.markerLabelsDisplay();
           });
 
           // map zoom event handler
           map.addListener('zoom_changed', function() {
-            mapsModel.obsFilteredBoundsMarkers(mapHelpers.displayMarkersInBounds());
+            // mapsModel.obsFilteredBoundsMarkers(mapHelpers.displayMarkersInBounds());
             mapHelpers.markerLabelsDisplay();
           });
 
@@ -1850,7 +1850,7 @@ var museumApp = (function() {
       // -------------------------------------------------------------------
       mapsModel.obsFilterSearch.subscribe(function(newValue) {
         // updates the map to show markers in compFilterMapList
-        mapsModel.obsFilteredBoundsMarkers(mapHelpers.displayMarkersInBounds());
+        //mapsModel.obsFilteredBoundsMarkers(mapHelpers.displayMarkersInBounds());
         mapHelpers.updateMapMarkerDisplay();
       }, null, "change");
 

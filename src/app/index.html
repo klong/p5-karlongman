@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width" />
@@ -38,26 +37,26 @@
       <div id="map" class="map-view" data-bind="mapPanel"></div>
     </div>
     <!-- MAP area END -->
-    <!-- APP controls START -->
-    <div id="appControls" class="ui stackable map-controls-area">
-      <div class="ui small buttons">
-        <button class="ui primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="text: uiModel.compNumOfPlacesForZoomOnMap ,click: mapHelpers.showAllMarkers"><span class="label-span"></span></button>
-        <button class="ui secondary button" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
-      </div>
-      <div class="ui small action input">
-        <input type="text" data-bind="textInput: mapsModel.obsFilterSearch">
-        <button class="ui small button" data-bind="text: uiModel.compFilterButtonLabel, click: museumDataHelpers.clearFilter"></button>
-      </div>
-      <div class="ui left pointing orange label" data-bind="visible: mapsModel.obsFilterSearch() !== '', text: uiModel.compFilterLabelText">
-      </div>
-    </div>
-    <!-- APP controls END -->
     <div id="searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList()">
+      <!-- APP controls START -->
+      <div id="appControls" class="ui stackable map-controls-area">
+        <div class="ui small buttons">
+          <button class="ui primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="text: uiModel.compNumOfPlacesForZoomOnMap ,click: mapHelpers.showAllMarkers"><span class="label-span"></span></button>
+          <button class="ui secondary button" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
+        </div>
+        <div class="ui small action input">
+          <input type="text" data-bind="textInput: mapsModel.obsFilterSearch">
+          <button class="ui small button" type="button" data-bind="text: uiModel.compFilterButtonLabel, click: museumDataHelpers.clearFilter"></button>
+        </div>
+        <div class="ui left pointing orange label" data-bind="visible: mapsModel.obsFilterSearch() !== '', text: uiModel.compFilterLabelText">
+        </div>
+      </div>
+      <!-- APP controls END -->
       <!-- MUSEUM MARKERS list START -->
       <div id="mapMarkersList" class="ui container results">
         <!-- map markers list -->
         <div class="ui very relaxed selection celled list">
-          <!-- ko foreach: {data: mapsModel.obsFilteredBoundsMarkers, as: 'museumMarker'}-->
+          <!-- ko foreach: {data: mapsModel.compSortedMapMarkers, as: 'museumMarker'}-->
           <div class="item" data-bind="click: $parent.mapHelpers.markerListClick.bind($data)">
             <div class="right floated content">
               <div class="circular small ui basic icon button" data-bind="click: $parent.mapHelpers.removeMarker.bind($data)">
@@ -158,9 +157,9 @@
       </div>
       <div class="ui divider"></div>
       <!-- ko foreach: {data: uiModel.obsSelectedMusuemObject, as: 'selectedObj'}-->
-      <div class="container">
+      <div class="segment">
         <!-- ko foreach: {data: selectedObj.fields.image_set, as: 'imageInSet'}-->
-        <img class="ui centered fluid rounded image" width="70" height="70" src='img/VandA_logo70x70.png' alt='none' data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}" />
+        <img class="ui centered fluid rounded image" width="70" height="70" src="img/VandA_logo70x70.png" alt="none" data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}" />
         <!-- /ko -->
         <div class="ui segment">
           <h3 data-bind="text: selectedObj.fields.materials_techniques"></h3>
