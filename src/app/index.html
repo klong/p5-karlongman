@@ -184,29 +184,14 @@
   </div>
   <!-- MUSUEUM OBJECT DETAILS div END -->
   <!-- MUSEUM APP content - END -->
-  <!-- DEBUG LIST START -->
-  <div id="debugList" class="debugMessageArea" data-bind="visible: museumApp.debugMessageArea">
-    <div class="message">
-      <input data-bind="textInput: mapsModel.placeName " />
-      <div data-bind="fadeInText: mapsModel.placeName"></div>
-      <div data-bind="fadeInText: mapsModel.compCurrentPlaceIdLngLat"></div>
-    </div>
-    <div class="message">
-      <div id="log-area" class="resultsArea">
-      </div>
-    </div>
-  </div>
-  <!-- DEBUG LIST END -->
   <!-- ESSENTIAL LIBRARY SCRIPTS -->
-  <!-- JQUERY -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-  <!-- GOOGLE MAPS API -->
-  <!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRpuFnelWb6VGyKNtMyUbKopJC-1anU7g&callback=window.mapsCallback">
-  </script> -->
-  <!-- APP SCRIPTS -->
+  <!-- APP SCRIPTS  -->
+  <script src="js/library/jquery-1.12.4.min.js"></script>
   <script src="js/library/semantic.js"></script>
+  <script src="js/library/knockout.js"></script>
   <script src="js/app.js"></script>
-
+  <!-- GOOGLE MAPS API -->
+  <script src="https://maps.googleapis.com/maps/api/js?libraries=places&callback=window.googleSuccess" onerror="window.googleError()"></script>
 </body>
 
 </html>

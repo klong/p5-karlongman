@@ -3,66 +3,12 @@
 //---------------------------------------------------------
 
 var museumApp = (function() {
-  var debugMessageArea = false;
+  "use strict";
   // vars are objects as museumApp will add property values
   var museumData = {};
   var museumViewModel = {
     ready: false
   };
-  //--------------------------------------
-  // appLibraryTests MODULE
-  //--------------------------------------
-  var appLibraryTests = function() {
-
-    function objectTest(libResource) {
-      return (typeof window[libResource.name] === 'object');
-    }
-
-    function functionTest(libResource) {
-      return (typeof window[libResource.name] === 'function');
-    }
-    //-----------------------------------------------------
-    //  appLibraryTests - public functions
-    //-----------------------------------------------------
-    return {
-      objectTest: objectTest,
-      functionTest: functionTest,
-    };
-
-  }(appLibraryTests);
-  //  END appLibraryTests MODULE
-
-  //----------------------------------------------------------------------------
-  // initAppLibs array defines external script need before our app can run
-  //----------------------------------------------------------------------------
-  var initAppLibs = [{
-    // google maps infobox api
-    name: 'InfoBox',
-    dataType: 'script',
-    // url: 'https://cdn.rawgit.com/googlemaps/v3-utility-library/master/infobox/src/infobox.js',
-    url: 'js/library/InfoBox.js',
-    isLoaded: 'no',
-    libraryTest: 'functionTest',
-    isReady: false
-  }, {
-    // knockout.js library
-    name: 'ko',
-    dataType: 'script',
-    // url: 'https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js',
-    url: 'js/library/knockout.js',
-    isLoaded: 'no',
-    libraryTest: 'objectTest',
-    isReady: false
-  }, {
-    // MarkerWithLabel.js library
-    name: 'MarkerWithLabel',
-    dataType: 'script',
-    // url: 'https://cdn.rawgit.com/googlemaps/v3-utility-library/master/markerwithlabel/src/markerwithlabel.js',
-    url: 'js/library/MarkerWithLabel.js',
-    isLoaded: 'no',
-    libraryTest: 'functionTest',
-    isReady: false
-  }, ];
 
   //-------------------------------------------------------------------------
   // initmuseumPlaces defines the search locations for default museumMarkers
@@ -113,7 +59,7 @@ var museumApp = (function() {
       } catch (exception) {}
     }() && localStorage;
     return storage;
-   };
+  };
 
   var makeInitMapmuseumData = function() {
     var initData = initmuseumPlaces;
@@ -139,6 +85,7 @@ var museumApp = (function() {
   //  init museum APP
   //-------------------
   var init = function() {
+    console.log("INIT");
     //---------------------------------------------------------
     // get museum app JSON data stored in localStorage if available
     //---------------------------------------------------------
@@ -151,87 +98,22 @@ var museumApp = (function() {
         museumData.data = JSON.parse(localStorage.museumDataStored);
       }
     }
-    //--------------------------------------------------------------------------
-    //  Async requests for MUSUEM DATA & JAVASCRIPT resources required for app
-    //--------------------------------------------------------------------------
-    $.each(initAppLibs, getAsyncResource);
-    addMessage('AJAX javascript REQUESTS : ' + initAppLibs.length);
-
-    var allAppLibrariesReady = function() {
-      var count = 0;
-      for (var i = 0; i < initAppLibs.length; i++) {
-        var resourceRefObj = initAppLibs[i];
-        if (checkLibraryIsReady(resourceRefObj)) {
-          count = count + 1;
-        }
-      }
-      // return test on all required script libraries ready
-      return (count === initAppLibs.length);
-    };
-
-    var checkLibraryIsReady = function(resourceRefObj) {
-      if (resourceRefObj.isReady === true) {
-        // dont need to do the library test if it has already passed once
-        return true;
-      } else {
-        // get a function to test resourceRefObj
-        var testFunction = appLibraryTests[resourceRefObj.libraryTest];
-        if (testFunction(resourceRefObj)) {
-          // passes ready test - set property in resourceRefObj
-          resourceRefObj.isReady = true;
-          return true;
-        } else {
-          // fails ready test
-          return false;
-        }
-      }
-    };
-
-    var bootApp = function() {
-      // NOTE: sorry, this code below seems a bit of hack to handle both the async callbacks and
-      // requirement to only create the knockout viewModel & applyBindings a single time
-      // on load resource success, we try to initalise the museum app, this can only happen
-      // when all required scripts and museumData for app have loaded.
-      if (allAppLibrariesReady()) {
-        // stop trying to bootstrap the museum app
-        // as all of the musuem app libraries have loaded and tested true
-        clearInterval(appBootstrap);
-        console.log('😀 museum App Scripts READY');
-        addMessage('😀 museum App Scripts READY');
-        //-----------------------------------
-        // create Knockout options & APP VIEWMODEL
-        ko.options.deferUpdates = true;
-        var vm = new MusAppViewModel();
-        // add the vm as new property of museumViewModel prototype object
-        museumViewModel.vm = vm;
-        //-----------------------------------
-        // apply bindings APP VIEWMODEL
-        ko.applyBindings(museumViewModel.vm);
-        museumViewModel.ready = true;
-        addMessage(' 😀 viewmodel READY');
-        makeInitMapmuseumData();
-        // hide loading area div
-        $('#loadingArea').hide("slow");
-        // unhide the initial hidden divs of UI (hidden make display less messy)
-        $('body').removeClass('initial-hide');
-        return true;
-      } else {
-        return false;
-      }
-    };
-
-    var initTakingTooLong = function() {
-      clearInterval(appBootstrap);
-      if (!allAppLibrariesReady()) {
-        console.log('sorry the musuem app is not working');
-      }
-    };
-
-    // start an INTERVAL for 'areweready'
-    var appBootstrap = window.setInterval(bootApp, 50);
-    // TIMEOUT when interval is taking too much time > 20 seconds
-    window.setTimeout(initTakingTooLong, 20000);
-
+    // -----------------------------------
+    // create Knockout options & APP VIEWMODEL
+    ko.options.deferUpdates = true;
+    var vm = new MusAppViewModel();
+    // add the vm as new property of museumViewModel prototype object
+    museumViewModel.vm = vm;
+    //-----------------------------------
+    // apply bindings APP VIEWMODEL
+    ko.applyBindings(museumViewModel.vm);
+    museumViewModel.ready = true;
+    makeInitMapmuseumData();
+    // hide loading area div
+    $('#loadingArea').hide("slow");
+    // unhide the initial hidden divs of UI (hidden make display less messy)
+    $('body').removeClass('initial-hide');
+    return true;
   };
   //-------------------
   // END init
@@ -300,7 +182,7 @@ var museumApp = (function() {
           var objectDetails = museumDataResult[0];
           // strip out any images in image_set that have no path
           var imageArray = objectDetails.fields.image_set;
-          filteredArray = imageArray.filter(function(imageDetails) {
+          var filteredArray = imageArray.filter(function(imageDetails) {
             // keep imageDetails that have a local path that is not an empty string
             return (imageDetails.fields.local.length > 0);
           });
@@ -370,13 +252,10 @@ var museumApp = (function() {
         $("#loadingArea").hide("slow");
         $(document.body).append(failText);
       }
-      // update message area
-      addMessage(resourceRefObj.name + ' 😞 not loaded with error: ' + errorThrown);
     });
     // 'ALLWAYS' callback
-    request.always(function(jqXHR, textStatus, errorThrown) {
-      addMessage('😀 ' + resourceRefObj.name + ' :- AJAX ' + resourceRefObj.dataType + ' ' + textStatus);
-    });
+    // request.always(function(jqXHR, textStatus, errorThrown) {
+    // });
   };
 
   var updateTheMuseumMarker = function(modelCollectionName, museumDataResult, musuemMarker) {
@@ -396,6 +275,7 @@ var museumApp = (function() {
         var maxNumObjectPlaces = parseInt(objectPlace.meta.result_count);
         var numMusuemObjects = parseInt(objectPlace.records.length);
         /// create label string
+        var label = "";
         if (maxNumObjectPlaces === 0) {
           label = 'sorry no musuem places';
         } else if (numMusuemObjects === maxNumObjectPlaces) {
@@ -489,13 +369,6 @@ var museumApp = (function() {
         localStorage.museumDataStored = JSON.stringify(museumData.data);
       }
     }
-  };
-  //-----------------------------------------------------------------------
-
-  // helper function to append a status paragraph to webpage log area
-  var addMessage = function(msg) {
-    var paragraph = '<p class="message">' + msg + '</p>';
-    $('#log-area').append(paragraph);
   };
 
   //----------------------------------------------------------------------------
@@ -1082,7 +955,7 @@ var museumApp = (function() {
       };
 
       var objectListClick = function(museumObj) {
-        museumObjectNumber = museumObj.fields.object_number;
+        var museumObjectNumber = museumObj.fields.object_number;
         museumDataHelpers.getmuseumObjectDetails(museumObjectNumber);
         // open the musuemObject details window
         openMuseumObjectWindow(museumObj);
@@ -1338,7 +1211,7 @@ var museumApp = (function() {
           obsMuseumMarkerListLabel: ko.observable(false)
         };
 
-        marker.addListener('click', function(e) {
+        marker.addListener('click', function() {
           panMapToMuseumMarker(museumMarker);
           if (uiModel.obsSelectedMusuemMarker()) {
             museumDataHelpers.clearSelectedObjectPlace();
@@ -1346,16 +1219,16 @@ var museumApp = (function() {
           uiModel.obsSelectedMusuemMarker(museumMarker);
         });
 
-        google.maps.event.addListener(marker, "mouseover", function() {
-          // set all visible marker to zIndex 0
-          var visibleMuseumMarkers = mapsModel.obsFilteredBoundsMarkers();
-          for (var i = 0; i < visibleMuseumMarkers.length; i++) {
-            visibleMuseumMarkers[i].prefPlaceMarker.setZIndex(0);
-          }
-          // raise up the marker the mouse is over
-          // so label is easier to read and marker is easier to click
-          marker.setZIndex(1);
-        });
+        // google.maps.event.addListener(marker, "mouseover", function() {
+        //   // set all visible marker to zIndex 0
+        //   var visibleMuseumMarkers = mapsModel.obsFilteredBoundsMarkers();
+        //   for (var i = 0; i < visibleMuseumMarkers.length; i++) {
+        //     visibleMuseumMarkers[i].prefPlaceMarker.setZIndex(0);
+        //   }
+        //   // raise up the marker the mouse is over
+        //   // so label is easier to read and marker is easier to click
+        //   marker.setZIndex(1);
+        // });
 
         // add marker to ko observable array for tracking, disposal etc
         mapsModel.obsArrayMapMarkers.push(museumMarker);
@@ -1381,7 +1254,8 @@ var museumApp = (function() {
                 // - see below looks for preferred types of addresses in the address types
                 // returned by google places service
                 var curTypes = curElement.types;
-                for (var i = 0; i < curTypes.length; i++) {
+                var curTypesLength = curTypes.length;
+                for (var i = 0; i < curTypesLength; i++) {
                   var place = curTypes[i];
                   var count = mapsModel.placeTypeInPrefOrder.indexOf(place);
                   if (count !== -1) {
@@ -1636,7 +1510,7 @@ var museumApp = (function() {
         };
         // GEOLOCATION error callback
         var geoError = function(error) {
-          museumApp.addMessage('local location not found 😞 with error: ' + geolocationErrorCodes[error]);
+        console.log('local location not found 😞 with error: ' + geolocationErrorCodes[error]);
         };
         var geolocationErrorCodes = {
           0: 'inknown Error',
@@ -1665,7 +1539,7 @@ var museumApp = (function() {
       // custom knockout binding handler for GOOGLE MAP
       ko.bindingHandlers.mapPanel = {
         init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-          map = new google.maps.Map(element, {
+          var map = new google.maps.Map(element, {
             backgroundColor: 'none',
             disableDoubleClickZoom: true,
             mapTypeControl: false,
@@ -1826,15 +1700,15 @@ var museumApp = (function() {
       // -------------------------------------------------------------------
       // selected musuem object place - BEFORE CHANGE
       // -------------------------------------------------------------------
-      uiModel.obsSelectedMusuemObjectPlace.subscribe(function(newPlaceObj) {
-
-      }, null, "beforeChange");
+      // uiModel.obsSelectedMusuemObjectPlace.subscribe(function(newPlaceObj) {
+      //
+      // }, null, "beforeChange");
       // -------------------------------------------------------------------
       // selected musuem object place - ON CHANGE
       // -------------------------------------------------------------------
-      uiModel.obsSelectedMusuemObjectPlace.subscribe(function(newPlaceObj) {
-
-      }, null, "change");
+      // uiModel.obsSelectedMusuemObjectPlace.subscribe(function(newPlaceObj) {
+      //
+      // }, null, "change");
 
       // -------------------------------------------------------------------
       // selected musuem object - ON CHANGE
@@ -1883,28 +1757,46 @@ var museumApp = (function() {
     // museumApp - export PUBLIC functions and variables
     museumViewModel: museumViewModel,
     init: init,
-    initAppLibs: initAppLibs,
     initmuseumPlaces: initmuseumPlaces,
     localStorageP: localStorageP,
-    museumData: museumData,
-    addMessage: addMessage,
-    debugMessageArea: debugMessageArea
+    museumData: museumData
   };
   // END MODULE museumApp
   //---------------------------------------------------------
 })();
 
+
+window.googleSuccess = function() {
+  "use strict";
+  // we have to load InfoBox and MarkerWithLabel scripts after google maps library
+  // as they are class extensions of google map classes that need to be defined.
+  // so we load them using JQuery 'getScript' here in the 'google maps loaded' callback
+  $.getScript("js/library/InfoBox.js")
+    .done(function(script, textStatus) {
+      $.getScript("js/library/MarkerWithLabel.js")
+        .done(function(script, textStatus) {
+          // all required scripts are now loaded so init the museumApp
+          museumApp.init();
+        })
+        .fail(function(jqxhr, settings, exception) {
+          ///
+        })
+    })
+    .fail(function(jqxhr, settings, exception) {
+      ///
+    });
+};
+
+window.googleError = function() {
+  "use strict";
+  alert("google maps error");
+};
+
 //-----------------------------------
 // JQuery document is ready function
 //-----------------------------------
 $(document).ready(function() {
-  var s = document.createElement("script");
-  s.type = "text/javascript";
-  s.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyCRpuFnelWb6VGyKNtMyUbKopJC-1anU7g&callback=window.gmap_draw";
-  window.gmap_draw = function() {
-    museumApp.init();
-  };
-  $("head").append(s);
+  "use strict";
   // set height of map area to 50% of the current document height
   // hack to get google map bug to display as div will
   // have 0 height if div id map is not set
