@@ -6,52 +6,59 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+
 body {
-  padding: 0;
   font-size: 14px;
   font-family: 'Noticia Text', serif;
   font-style: normal;
   font-weight: 400;
 }
 
-body.initial-hide #musuemObjectsList, body.initial-hide #topbar, body.initial-hide #appControls, body.initial-hide #musuemObjectPlaceList, body.initial-hide #searchResultsList, body.initial-hide #musuemObjectsDetails, body.initial-hide #debugList {
+
+body.initial-hide .musuemObjectsList, body.initial-hide .topbar, body.initial-hide .map-controls-area, body.initial-hide .musuemObjectPlaceList, body.initial-hide .searchResultsList, body.initial-hide .musuemObjectsDetails {
   display: none;
 }
 
+
 p.weight1 {
-  font-family: "Noticia Text";
+  font-family: "Noticia Text", serif;
   font-weight: 400;
   font-style: italic;
   font-size: 36px;
   line-height: 30px;
 }
+
+
 p.weight2 {
-  font-family: "Noticia Text";
+  font-family: "Noticia Text", serif;
   font-weight: 400;
   font-style: normal;
   font-size: 36px;
   line-height: 30px;
 }
+
+
 p.weight3 {
-  font-family: "Noticia Text";
+  font-family: "Noticia Text", serif;
   font-weight: 700;
   font-style: italic;
   font-size: 36px;
   line-height: 30px;
 }
+
+
 .controls {
   margin-right: 20px;
   margin-top: 20px;
 }
-.something {
-  background-color: snow;
-  height: 200px;
-}
+
 
 .loader-area {
   width:auto;
   height: 280px;
 }
+
 
 .map-view {
   padding: 0;
@@ -60,108 +67,117 @@ p.weight3 {
   width: 100%;
 
 }
+
+
 .map-container {
   padding: 0;
   height: 100%;
   width: 100%;
 }
+
+
 .info-window-content {
   height: 150px;
   width: 300px;
 }
+
+.breadcrumb .section{
+  line-height: 32px;
+}
+
 
 .controls {
   margin-top: 8px;
   border: 1px solid transparent;
   border-radius: 2px 0 0 2px;
   box-sizing: border-box;
-  -moz-box-sizing: border-box;
   height: 32px;
   outline: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
+
 .map-controls-area {
-  margin-top: 20px;
-  margin-bottom: 10px;
-  border-top: 20px;
+  margin: 0;
+  padding-bottom: 12px;
+  line-height: 42px;
 }
+
 
 .resultsArea {
   background-color: snow;
   text-align: left;
   padding-left: 16px;
 }
+
+
 .message {
   padding: 10px;
 }
+
+
 .places-list-item {
   list-style: none;
 }
+
+
 .list-area-h2 {
   font-size: 1.3em;
 }
+
 
 .info-window-content {
   height: 300px;
   background-color: snow;
 }
 
+
 .label-span {
-  font-family: "Noticia Text";
+  font-family: "Noticia Text", sans-serif;
   font-weight: 700;
   font-style: italic;
   font-size: 14px;
   line-height: 22px;
 }
 
+
 .label-vam {
-  font-family: "Noticia Text";
+  font-family: "Noticia Text", sans-serif;
   font-weight: 500;
   font-style: italic;
   font-size: 12px;
   line-height: 22px;
 }
 
+
 .infobox-wrapper {
     display:none;
 }
+
 
 .infoBox {
     /*border:1px solid black;*/
     margin-top: 8px;
     background-color: snow;
     color: black;
-    font-family: "Noticia Text", "Arial", sans-serif;
+    font-family: "Noticia Text", sans-serif;
     font-size:12px;
     padding: .5em 1em;
-    -webkit-border-radius: 8px;
-    -moz-border-radius: 8px;
     border-style: solid;
     border-width: thin;;
     border-color: salmon;
     border-radius: 8px;
-    -webkit-box-shadow: 0 0 4px #000;
     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
     width: 200px;
     height: 34px;
 }
 
+
 .musuemobject-infoBox {
-    /*border:1px solid black;*/
     display: inline-block;
-    overflow:auto;
-    /*margin-top: 8px;*/
-    /*background: snow;*/
+    overflow: auto;
     background-color: snow;
-    /*color: black;
-    font-family: "Noticia Text", "Arial", sans-serif;
-    font-size:14px;*/
-    /*padding: .5em 1em;*/
-    -webkit-border-radius: 8px;
-    -moz-border-radius: 8px;
     border-radius: 8px;
-    -webkit-box-shadow: 0 0 4px #000;
     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
     width: auto;
     height: auto;
@@ -171,13 +187,12 @@ p.weight3 {
 .place-labels {
   color: salmon;
   background-color: white;
-  font-family: "Noticia Text", "Arial", sans-serif;
+  font-family: "Noticia Text", sans-serif;
   font-size: 12px;
   /*font-weight: bold;*/
   text-align: center;
   white-space: nowrap;
-  padding-left: 4px;
-  padding-right: 4px;
+  padding: 0 4px 4px;
   border: 2px;
   border-style: solid;
   border-radius: 6px;

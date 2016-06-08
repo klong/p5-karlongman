@@ -85,7 +85,6 @@ var museumApp = (function() {
   //  init museum APP
   //-------------------
   var init = function() {
-    console.log("INIT");
     //---------------------------------------------------------
     // get museum app JSON data stored in localStorage if available
     //---------------------------------------------------------
@@ -113,7 +112,10 @@ var museumApp = (function() {
     $('#loadingArea').hide("slow");
     // unhide the initial hidden divs of UI (hidden make display less messy)
     $('body').removeClass('initial-hide');
-    return true;
+    // set browser window resize handler to show all markers
+    window.addEventListener("resize", function() {
+      museumViewModel.vm.mapHelpers.showAllMarkers();
+    });
   };
   //-------------------
   // END init
@@ -393,7 +395,6 @@ var museumApp = (function() {
       obsUserLocalPlace: ko.observable(false),
       obsFilterSearch: ko.observable(''),
       obsSelectedPlace: ko.observable(false),
-      //placeName: ko.observable('typograph')
     };
     // add knockout computed variables outside of mapsModel object literal definition
     // as referencing other ko.observables inside mapsModel not possible until defined?
@@ -693,12 +694,12 @@ var museumApp = (function() {
         // we have no exisitng museumData
         if (placeDataResults !== false) {
           // setup a new object literal to store in the musuemMarker
-          var museumCollectionDataObj = {
-            googlePlace: preferedPlace,
-            resourceRefObj: resourceRefObj,
-            museumCollectionType: resourceRefObj.modelCollection, // property name used in musuemData to store data
-            museumData: placeDataResults
-          };
+          // var museumCollectionDataObj = {
+          //   googlePlace: preferedPlace,
+          //   resourceRefObj: resourceRefObj,
+          //   museumCollectionType: resourceRefObj.modelCollection, // property name used in musuemData to store data
+          //   museumData: placeDataResults
+          // };
           //---------------------------------------------------------
           // update the uiModel with museum object places
           //---------------------------------------------------------
@@ -990,8 +991,6 @@ var museumApp = (function() {
           //------------------------------------------------
           delayedFitBounds(bounds);
           //-------------------------
-        } else {
-          console.log('no markers on map for bounds');
         }
       };
 
@@ -1219,17 +1218,6 @@ var museumApp = (function() {
           uiModel.obsSelectedMusuemMarker(museumMarker);
         });
 
-        // google.maps.event.addListener(marker, "mouseover", function() {
-        //   // set all visible marker to zIndex 0
-        //   var visibleMuseumMarkers = mapsModel.obsFilteredBoundsMarkers();
-        //   for (var i = 0; i < visibleMuseumMarkers.length; i++) {
-        //     visibleMuseumMarkers[i].prefPlaceMarker.setZIndex(0);
-        //   }
-        //   // raise up the marker the mouse is over
-        //   // so label is easier to read and marker is easier to click
-        //   marker.setZIndex(1);
-        // });
-
         // add marker to ko observable array for tracking, disposal etc
         mapsModel.obsArrayMapMarkers.push(museumMarker);
         return museumMarker;
@@ -1289,7 +1277,7 @@ var museumApp = (function() {
                   bestPlace = bestPlaceResults[0];
                 }
               } else {
-                console.log('no peferedPlaceP address');
+                //no peferedPlaceP address
                 // no best place so choose first address of the original geocode results
                 // usually a 'street address'
                 bestPlace = results[0];
@@ -1312,11 +1300,11 @@ var museumApp = (function() {
                 //-------------------------------------------------------------------------
               }
             } else {
-              console.log('no geocode results found');
+              // no geocode results found
               return false;
             }
           } else {
-            console.log('Gocoder Error: ' + status);
+            // Gocoder Error
             return false;
           }
         });
@@ -1444,11 +1432,9 @@ var museumApp = (function() {
         var filteredMarkers = ko.utils.compareArrays(mapsModel.obsArrayMapMarkers(), mapsModel.compFilterMapList());
         ko.utils.arrayForEach(filteredMarkers, function(museumMarker) {
           if (museumMarker.status === "deleted") {
-            // take marker off map
-            museumMarker.value.prefPlaceMarker.setMap(null);
+            museumMarker.value.prefPlaceMarker.setVisible(false);
           } else if (museumMarker.status === "retained") {
-            // marker on map
-            museumMarker.value.prefPlaceMarker.setMap(mapsModel.googleMap);
+            museumMarker.value.prefPlaceMarker.setVisible(true);
           }
         });
       };
@@ -1510,7 +1496,7 @@ var museumApp = (function() {
         };
         // GEOLOCATION error callback
         var geoError = function(error) {
-        console.log('local location not found 😞 with error: ' + geolocationErrorCodes[error]);
+          console.log('local location not found 😞 with error: ' + geolocationErrorCodes[error]);
         };
         var geolocationErrorCodes = {
           0: 'inknown Error',
@@ -1528,13 +1514,13 @@ var museumApp = (function() {
     var koBindingHandlers = function() {
 
       // debug helper (not used in app) that jquery fades text in/out when its binding value changes
-      ko.bindingHandlers.fadeInText = {
-        update: function(element, valueAccessor) {
-          $(element).hide();
-          ko.bindingHandlers.text.update(element, valueAccessor);
-          $(element).fadeIn();
-        }
-      };
+      // ko.bindingHandlers.fadeInText = {
+      //   update: function(element, valueAccessor) {
+      //     $(element).hide();
+      //     ko.bindingHandlers.text.update(element, valueAccessor);
+      //     $(element).fadeIn();
+      //   }
+      // };
 
       // custom knockout binding handler for GOOGLE MAP
       ko.bindingHandlers.mapPanel = {
@@ -1765,11 +1751,10 @@ var museumApp = (function() {
   //---------------------------------------------------------
 })();
 
-
 window.googleSuccess = function() {
   "use strict";
   // we have to load InfoBox and MarkerWithLabel scripts after google maps library
-  // as they are class extensions of google map classes that need to be defined.
+  // as they are extended classes of google maps API.
   // so we load them using JQuery 'getScript' here in the 'google maps loaded' callback
   $.getScript("js/library/InfoBox.js")
     .done(function(script, textStatus) {
@@ -1779,11 +1764,12 @@ window.googleSuccess = function() {
           museumApp.init();
         })
         .fail(function(jqxhr, settings, exception) {
-          ///
-        })
+          console.log("fail - MarkerWithLabel");
+        });
     })
     .fail(function(jqxhr, settings, exception) {
       ///
+      console.log("fail - InfoBox");
     });
 };
 

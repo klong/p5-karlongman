@@ -2,19 +2,20 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width" />
+  <meta name="viewport" content="width=device-width">
   <title>P5 Neighborhood map</title>
   <!-- LIBRARY STYLE LINKS -->
-  <link href="css/library/semantic.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/library/semantic.css" >
   <!-- FONTS -->
-  <link href="https://fonts.googleapis.com/css?family=Noticia+Text:400,700" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,700" >
   <!-- STYLE LINKS -->
-  <link href="css/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" >
+  <link rel="shortcut icon" type="image/ico" href="img/favicon.ico">
 </head>
 
 <body class="initial-hide">
   <!-- MUSEUM APP loading screen - START -->
-  <div id="loadingArea" class="container">
+  <div id="loadingArea" class="container loadingArea">
     <div class="ui loading circular inverted segment loader-area">
       <div class="ui header">
         <h3>Loading Neighborhood map</h3></div>
@@ -22,8 +23,8 @@
   </div>
   <!-- MUSEUM APP loading screen - END -->
   <!-- MUSEUM APP content - START -->
-  <div id="topbar" class="ui container">
-    <div class="ui header fluid medium gray label">
+  <div class="ui container">
+    <div class="ui header fluid medium gray label topbar">
       <i class="world blue icon"></i>
       <div class="content">
         Neighborhood Map
@@ -37,7 +38,7 @@
       <div id="map" class="map-view" data-bind="mapPanel"></div>
     </div>
     <!-- MAP area END -->
-    <div id="searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList()">
+    <div id="searchResultsList" class="ui segment searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList()">
       <!-- APP controls START -->
       <div id="appControls" class="ui stackable map-controls-area">
         <div class="ui small buttons">
@@ -53,7 +54,7 @@
       </div>
       <!-- APP controls END -->
       <!-- MUSEUM MARKERS list START -->
-      <div id="mapMarkersList" class="ui container results">
+      <div id="mapMarkersList" class="ui container results mapMarkersList">
         <!-- map markers list -->
         <div class="ui very relaxed selection celled list">
           <!-- ko foreach: {data: mapsModel.compSortedMapMarkers, as: 'museumMarker'}-->
@@ -75,7 +76,7 @@
     </div>
     <!-- MUSEUM MARKERS list END -->
     <!-- MUSUEUM OBJECT PLACES list START -->
-    <div id="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemPlaceList()">
+    <div id="musuemObjectPlaceList" class="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemPlaceList()">
       <div class="ui container">
         <div class="ui divider"></div>
         <div class="ui large breadcrumb">
@@ -104,7 +105,7 @@
   </div>
   <!-- MUSUEUM OBJECT PLACES list END -->
   <!-- MUSUEUM OBJECTS list START -->
-  <div id="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjectsList()">
+  <div id="musuemObjectsList" class="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjectsList()">
     <div class="ui container">
       <div class="ui divider"></div>
       <div class="ui large breadcrumb">
@@ -137,7 +138,7 @@
   </div>
   <!-- MUSUEUM OBJECTS list END -->
   <!-- MUSUEUM OBJECT DETAILS div START -->
-  <div id="musuemObjectsDetails" data-bind="visible: uiModel.obsSelectedMusuemObject()">
+  <div id="musuemObjectsDetails" class="musuemObjectsDetails" data-bind="visible: uiModel.obsSelectedMusuemObject()">
     <div class="ui container">
       <div class="ui divider"></div>
       <div class="ui large breadcrumb">
@@ -191,7 +192,7 @@
   <script src="js/library/knockout.js"></script>
   <script src="js/app.js"></script>
   <!-- GOOGLE MAPS API -->
-  <script src="https://maps.googleapis.com/maps/api/js?libraries=places&callback=window.googleSuccess" onerror="window.googleError()"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places&callback=window.googleSuccess" onerror="window.googleError()"></script>
 </body>
 
 </html>
