@@ -9,6 +9,7 @@ var museumApp = (function() {
   var museumViewModel = {
     ready: false
   };
+  var googleFail = false;
 
   //-------------------------------------------------------------------------
   // initmuseumPlaces defines the search locations for default museumMarkers
@@ -79,6 +80,21 @@ var museumApp = (function() {
         museumApp.museumViewModel.vm.mapHelpers.searchHere(element.location);
       });
     }
+  };
+
+  //-------------------
+  //   museum APP fail - google maps API or extend classes failure
+  //-------------------
+  var appFail = function(errorText) {
+    var errorHtmlText = '';
+    errorHtmlText += '<section class="ui negative large message">';
+    errorHtmlText +=   '<i class="large orange bug icon"></i>';
+    errorHtmlText +=   '<h3>Sorry, failed to get ' + errorText + '</span></h3>';
+    errorHtmlText +=   '<p>Refresh the browser page or try again later ...</p>';
+    errorHtmlText += '</section>';
+
+    museumApp.googleFail = errorHtmlText;
+    ko.applyBindings();
   };
 
   //-------------------
@@ -1743,6 +1759,8 @@ var museumApp = (function() {
     // museumApp - export PUBLIC functions and variables
     museumViewModel: museumViewModel,
     init: init,
+    appFail: appFail,
+    googleFail: googleFail,
     initmuseumPlaces: initmuseumPlaces,
     localStorageP: localStorageP,
     museumData: museumData
@@ -1751,31 +1769,41 @@ var museumApp = (function() {
   //---------------------------------------------------------
 })();
 
+
+
 window.googleSuccess = function() {
   "use strict";
   // we have to load InfoBox and MarkerWithLabel scripts after google maps library
   // as they are extended classes of google maps API.
   // so we load them using JQuery 'getScript' here in the 'google maps loaded' callback
   $.getScript("js/library/InfoBox.js")
-    .done(function(script, textStatus) {
+    .done(function() {
       $.getScript("js/library/MarkerWithLabel.js")
-        .done(function(script, textStatus) {
-          // all required scripts are now loaded so init the museumApp
+        .done(function() {
+          // google class scripts loaded
+          // init the museumApp and its viewModel
           museumApp.init();
         })
-        .fail(function(jqxhr, settings, exception) {
-          console.log("fail - MarkerWithLabel");
+        .fail(function() {
+          // MarkerWithLabel script failed to load
+          if (typeof ko === "object") {
+            museumApp.appFail('MarkerWithLabel');
+          }
         });
     })
-    .fail(function(jqxhr, settings, exception) {
-      ///
-      console.log("fail - InfoBox");
+    .fail(function() {
+      // InfoBox script failed to load
+      if (typeof ko === "object") {
+        museumApp.appFail('InfoBox');
+      }
     });
 };
 
 window.googleError = function() {
   "use strict";
-  alert("google maps error");
+  if (typeof ko === "object") {
+    museumApp.appFail('google maps');
+  }
 };
 
 //-----------------------------------

@@ -1,27 +1,34 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <title>P5 Neighborhood map</title>
   <!-- LIBRARY STYLE LINKS -->
-  <link rel="stylesheet" href="css/library/semantic.css" >
+  <link rel="stylesheet" href="css/library/semantic.css">
   <!-- FONTS -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,700" >
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,700">
   <!-- STYLE LINKS -->
-  <link rel="stylesheet" href="css/style.css" >
+  <link rel="stylesheet" href="css/style.css">
   <link rel="shortcut icon" type="image/ico" href="img/favicon.ico">
 </head>
 
 <body class="initial-hide">
   <!-- MUSEUM APP loading screen - START -->
-  <div id="loadingArea" class="container loadingArea">
+  <div id="loadingArea" class="container loadingArea" data-bind="visible: !museumApp.googleFail">
     <div class="ui loading circular inverted segment loader-area">
       <div class="ui header">
         <h3>Loading Neighborhood map</h3></div>
     </div>
   </div>
   <!-- MUSEUM APP loading screen - END -->
+  <!-- MUSEUM APP error feedback - START -->
+  <div class="container appError" data-bind="visible: museumApp.googleFail, css: {appFail: true}">
+    <section data-bind="html: museumApp.googleFail">
+    </section>
+  </div>
+  <!-- MUSEUM APP error feedback - END -->
   <!-- MUSEUM APP content - START -->
   <div class="ui container">
     <div class="ui header fluid medium gray label topbar">
@@ -102,85 +109,86 @@
         </div>
       </div>
     </div>
-  </div>
-  <!-- MUSUEUM OBJECT PLACES list END -->
-  <!-- MUSUEUM OBJECTS list START -->
-  <div id="musuemObjectsList" class="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjectsList()">
-    <div class="ui container">
-      <div class="ui divider"></div>
-      <div class="ui large breadcrumb">
-        <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
-          <div class="ui basic label">Places</div>
+
+    <!-- MUSUEUM OBJECT PLACES list END -->
+    <!-- MUSUEUM OBJECTS list START -->
+    <div id="musuemObjectsList" class="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjectsList()">
+      <div class="ui container">
+        <div class="ui divider"></div>
+        <div class="ui large breadcrumb">
+          <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
+            <div class="ui basic label">Places</div>
+          </div>
+          <i class="orange arrow right icon"></i>
+          <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
+            <div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div>
+          </div>
+          <i class="orange arrow right icon"></i>
+          <div class="active section" data-bind="visible: uiModel.obsCurrentMuseumObjects().length > 0, text: uiModel.compObjectPlaceCrumb"></div>
+          <i class="ui tiny orange exchange icon" data-bind="visible: museumDataHelpers.loadMorePlacesVisible"></i>
+          <div class="ui mini blue button" data-bind="visible: museumDataHelpers.loadMorePlacesVisible, click: museumDataHelpers.loadMorePlaceObjects"><i class="refresh icon"></i> load 45 more objects</div>
         </div>
-        <i class="orange arrow right icon"></i>
-        <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
-          <div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div>
-        </div>
-        <i class="orange arrow right icon"></i>
-        <div class="active section" data-bind="visible: uiModel.obsCurrentMuseumObjects().length > 0, text: uiModel.compObjectPlaceCrumb"></div>
-        <i class="ui tiny orange exchange icon" data-bind="visible: museumDataHelpers.loadMorePlacesVisible"></i>
-        <div class="ui mini blue button" data-bind="visible: museumDataHelpers.loadMorePlacesVisible, click: museumDataHelpers.loadMorePlaceObjects"><i class="refresh icon"></i> load 45 more objects</div>
-      </div>
-      <div class="ui large middle aligned selection divided list">
-        <!-- ko foreach: {data: uiModel.obsCurrentMuseumObjects, as: 'museumObject'}-->
-        <div class="item" data-bind="click: $parent.mapHelpers.objectListClick.bind($data)">
-          <img class="tiny rounded image item" width="70" height="70" src="img/VandA_logo70x70.png" alt="Victoria and Albert Museum logo" data-bind="attr:{src: museumObject.imgURL, alt: museumObject.fields.object}">
-          <div class="content">
-            <div class="header" data-bind="text: museumObject.fields.title"></div>
-            <div class="description">
-              <p data-bind="text: museumObject.fields.object + ' ' + museumObject.fields.artist + ', ' + museumObject.fields.year_start"></p>
+        <div class="ui large middle aligned selection divided list">
+          <!-- ko foreach: {data: uiModel.obsCurrentMuseumObjects, as: 'museumObject'}-->
+          <div class="item" data-bind="click: $parent.mapHelpers.objectListClick.bind($data)">
+            <img class="tiny rounded image item" width="70" height="70" src="img/VandA_logo70x70.png" alt="Victoria and Albert Museum logo" data-bind="attr:{src: museumObject.imgURL, alt: museumObject.fields.object}">
+            <div class="content">
+              <div class="header" data-bind="text: museumObject.fields.title"></div>
+              <div class="description">
+                <p data-bind="text: museumObject.fields.object + ' ' + museumObject.fields.artist + ', ' + museumObject.fields.year_start"></p>
+              </div>
             </div>
           </div>
+          <!-- /ko -->
         </div>
-        <!-- /ko -->
       </div>
     </div>
-  </div>
-  <!-- MUSUEUM OBJECTS list END -->
-  <!-- MUSUEUM OBJECT DETAILS div START -->
-  <div id="musuemObjectsDetails" class="musuemObjectsDetails" data-bind="visible: uiModel.obsSelectedMusuemObject()">
-    <div class="ui container">
-      <div class="ui divider"></div>
-      <div class="ui large breadcrumb">
-        <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
-          <div class="ui basic label">Places</div>
+    <!-- MUSUEUM OBJECTS list END -->
+    <!-- MUSUEUM OBJECT DETAILS div START -->
+    <div id="musuemObjectsDetails" class="musuemObjectsDetails" data-bind="visible: uiModel.obsSelectedMusuemObject()">
+      <div class="ui container">
+        <div class="ui divider"></div>
+        <div class="ui large breadcrumb">
+          <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
+            <div class="ui basic label">Places</div>
+          </div>
+          <i class="orange arrow right icon"></i>
+          <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
+            <div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div>
+          </div>
+          <i class="orange arrow right icon"></i>
+          <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemObject">
+            <div class="ui basic label" data-bind="text: uiModel.compObjectPlaceCrumb"></div>
+          </div>
+          <i class="orange arrow right icon"></i>
+          <div class="active section" data-bind="text: uiModel.compMusuemObjectCrumb"></div>
         </div>
-        <i class="orange arrow right icon"></i>
-        <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
-          <div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div>
-        </div>
-        <i class="orange arrow right icon"></i>
-        <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemObject">
-          <div class="ui basic label" data-bind="text: uiModel.compObjectPlaceCrumb"></div>
-        </div>
-        <i class="orange arrow right icon"></i>
-        <div class="active section" data-bind="text: uiModel.compMusuemObjectCrumb"></div>
-      </div>
-      <div class="ui divider"></div>
-      <!-- ko foreach: {data: uiModel.obsSelectedMusuemObject, as: 'selectedObj'}-->
-      <div class="segment">
-        <!-- ko foreach: {data: selectedObj.fields.image_set, as: 'imageInSet'}-->
-        <img class="ui centered fluid rounded image" width="70" height="70" src="img/VandA_logo70x70.png" alt="none" data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}" />
-        <!-- /ko -->
-        <div class="ui segment">
-          <h3 data-bind="text: selectedObj.fields.materials_techniques"></h3>
-          <div class="content">
-            <div class="header">
-              <h4 data-bind="html: selectedObj.fields.artist"></h4>
-              <div class="meta"><span class="date" data-bind="text: selectedObj.fields.date_text"></span></div>
-              <div class="description">
-                <p data-bind="html: selectedObj.fields.dimensions"></p>
-                <p data-bind="html: selectedObj.fields.physical_description"></p>
-                <p data-bind="html: selectedObj.fields.public_access_description"></p>
-                <p class="ui label" data-bind="text: selectedObj.fields.location"></p>
+        <div class="ui divider"></div>
+        <!-- ko foreach: {data: uiModel.obsSelectedMusuemObject, as: 'selectedObj'}-->
+        <div class="segment">
+          <!-- ko foreach: {data: selectedObj.fields.image_set, as: 'imageInSet'}-->
+          <img class="ui centered fluid rounded image" width="70" height="70" src="img/VandA_logo70x70.png" alt="none" data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}" />
+          <!-- /ko -->
+          <div class="ui segment">
+            <h3 data-bind="text: selectedObj.fields.materials_techniques"></h3>
+            <div class="content">
+              <div class="header">
+                <h4 data-bind="html: selectedObj.fields.artist"></h4>
+                <div class="meta"><span class="date" data-bind="text: selectedObj.fields.date_text"></span></div>
+                <div class="description">
+                  <p data-bind="html: selectedObj.fields.dimensions"></p>
+                  <p data-bind="html: selectedObj.fields.physical_description"></p>
+                  <p data-bind="html: selectedObj.fields.public_access_description"></p>
+                  <p class="ui label" data-bind="text: selectedObj.fields.location"></p>
+                </div>
+                <div class="ui divider"></div>
+                <p class="label-vam"><a href="http://collections.vam.ac.uk/information/information_apiterms" target="_blank">Content provided by Victoria and Albert Museum collections API</a></p>
               </div>
-              <div class="ui divider"></div>
-              <p class="label-vam"><a href="http://collections.vam.ac.uk/information/information_apiterms" target="_blank">Content provided by Victoria and Albert Museum collections API</a></p>
             </div>
           </div>
         </div>
+        <!-- /ko -->
       </div>
-      <!-- /ko -->
     </div>
   </div>
   <!-- MUSUEUM OBJECT DETAILS div END -->
