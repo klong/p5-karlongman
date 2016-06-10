@@ -244,7 +244,7 @@ var museumApp = (function() {
         errorHtml += '   <div class="ui segment">';
         errorHtml += '    <div class="ui header">';
         errorHtml += '     <div class="ui tiny image">';
-        errorHtml += '      <img src="../img/VA_logo.png"></div>';
+        errorHtml += '      <img src="img/VA_logo.png"></div>';
         errorHtml += '      <div class="segment">';
         errorHtml += '        <h3>' + resourceRefObj.name + '</h3>';
         errorHtml += '        <p>' + errorText + '</p>';
@@ -634,7 +634,7 @@ var museumApp = (function() {
             // create a new 'imgURL' property on fields object
             museumObj.imgURL = imgURL;
           } else {
-            museumObj.imgURL = "../img/VandA_logo70x70.png";
+            museumObj.imgURL = "img/VandA_logo70x70.png";
           }
         }
       };

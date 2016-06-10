@@ -120,6 +120,12 @@ p.weight3 {
 }
 
 
+.filter-control {
+  background-color: red;
+  padding-left: 10px;
+}
+
+
 .resultsArea {
   background-color: snow;
   text-align: left;
