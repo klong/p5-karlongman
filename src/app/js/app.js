@@ -106,7 +106,7 @@ var museumApp = (function() {
     //---------------------------------------------------------
     if (localStorageP()) {
       if (localStorage.museumDataStored) {
-        console.log('GOT SOME LOCAL museumDataStored');
+        //console.log('GOT SOME LOCAL museumDataStored');
         // have some exisiting localStorage.museumDataStored
         // rehydrate the local stringify stored JSON data
         // NOTE: needed to add new property on museumData obj for this to work ??
@@ -154,6 +154,7 @@ var museumApp = (function() {
       resourceRefObj.isLoaded = 'loaded';
       //----------------------------------------------------------------
       if (resourceRefObj.dataType === 'json') {
+        museumApp.museumViewModel.vm.uiModel.obsUIerrorHtml(false);
         // callback returned musuem data resource
         var museumCollectionDataObj = {}; // an object literal for musuemData
         var musuemCollectionType = resourceRefObj.modelCollection;
@@ -174,7 +175,7 @@ var museumApp = (function() {
             museumCollectionType: resourceRefObj.modelCollection,
             museumData: museumDataResult
           };
-          // musuemplaces are also stored inside the Museum Marker
+          // museumplaces are also stored inside the Museum Marker
           // so it has references to the places within radius of search
           updateTheMuseumMarker(musuemCollectionType, museumDataResult, updateObjectRef);
           museumApp.museumViewModel.vm.uiModel.obsSelectedMusuemMarker(updateObjectRef);
@@ -183,7 +184,7 @@ var museumApp = (function() {
           museumApp.museumViewModel.vm.mapsModel.googleMap.setZoom(10);
         } else if (musuemCollectionType === 'placeObjects') {
           // add an external imageURL for each museumObject in the museumDataResult
-          // when its 'primary_image_id' field is "" we use a deafault image thumbnail
+          // when its 'primary_image_id' field is "" we use a default image thumbnail
           museumApp.museumViewModel.vm.museumDataHelpers.setThumbImagePath(museumDataResult);
           // an object literal for 'placeObjects' musuemData
           museumCollectionDataObj = {
@@ -218,7 +219,7 @@ var museumApp = (function() {
         //-----------------------------------------------------
         // update musuemData and localstorage cache
         if ($.isEmptyObject(museumCollectionDataObj)) {
-          console.log('did not recognise JSON musuemCollectionType ' + musuemCollectionType);
+          //console.log('did not recognise JSON musuemCollectionType ' + musuemCollectionType);
         } else {
           updateMuseumData(museumCollectionDataObj);
         }
@@ -227,15 +228,7 @@ var museumApp = (function() {
     });
     // 'FAIL' callback e.g resource error or network timeout
     request.fail(function(jqXHR, textStatus, errorThrown) {
-      console.dir(jqXHR);
-      // output resource ref to console for debug
-      console.log('AJAX resource FAILED:' + resourceRefObj.name);
-      console.dir(resourceRefObj);
       if (resourceRefObj.dataType === 'json') {
-        // if (resourceRefObj.modelCollection === "place") {
-        //   // TODO a failed place resource leave museum app in unrecoverable states
-        //   // so clean up the musuemMarker etc that have been already made
-        // }
         museumApp.museumViewModel.vm.mapsModel.googleMap.setZoom(2);
         var errorText = 'Sorry, cannot get V&A museum ' + resourceRefObj.modelCollection + ' data';
         var helpText = '';
@@ -255,25 +248,12 @@ var museumApp = (function() {
         errorHtml += '  </div>';
         // open map infoBox window
         museumApp.museumViewModel.vm.mapHelpers.openInfoBoxWithError(errorHtml);
-      } else if (resourceRefObj.dataType === 'script') {
-        // set the reqs 'isLoaded' key in appReqs to show not loaded
-        resourceRefObj.isLoaded = 'failed';
-        var failText = '<div id="helloDiv" class="container">';
-        failText += '     <div class="ui segment">';
-        failText += '      <p class="ui header">Sorry Musuem App cannot start</p>';
-        failText += '      <div class="ui tiny basic red label">';
-        failText += '       <h3>' + resourceRefObj.name + ': Script failed to load</h3>';
-        failText += '      </div>';
-        failText += '     </div>';
-        failText += '   </div>';
-        // display fail message div
-        $("#loadingArea").hide("slow");
-        $(document.body).append(failText);
       }
     });
     // 'ALLWAYS' callback
-    // request.always(function(jqXHR, textStatus, errorThrown) {
-    // });
+    request.always(function(jqXHR, textStatus, errorThrown) {
+      museumApp.museumViewModel.vm.uiModel.obsUIerrorHtml("loading museum data ...");
+    });
   };
 
   var updateTheMuseumMarker = function(modelCollectionName, museumDataResult, musuemMarker) {
@@ -296,6 +276,9 @@ var museumApp = (function() {
         var label = "";
         if (maxNumObjectPlaces === 0) {
           label = 'sorry no musuem places';
+          var placeLabel = musuemMarker.prefPlaceMarker.labelContent;
+          var buttonHtml = '<div class="ui tiny basic button">remove ' + placeLabel + '</div>';
+          museumApp.museumViewModel.vm.uiModel.obsUIerrorHtml('<p>sorry no musuem places found at ' + placeLabel + buttonHtml + '</p>');
         } else if (numMusuemObjects === maxNumObjectPlaces) {
           label = numMusuemObjects + " museum place";
         } else if (numMusuemObjects === 1) {
@@ -469,6 +452,7 @@ var museumApp = (function() {
     // ui Model
     //-------------
     var uiModel = {
+      obsUIerrorHtml: ko.observable(false),
       // infoBox for museum object details
       musemObjectWindow: new InfoBox({
         boxClass: 'musuemobject-infoBox',
@@ -1317,10 +1301,12 @@ var museumApp = (function() {
               }
             } else {
               // no geocode results found
+              uiModel.obsUIerrorHtml("No place found at this location. Please try somewhere else on the map");
               return false;
             }
           } else {
             // Gocoder Error
+            uiModel.obsUIerrorHtml("Sorry no place found at this location. Please try somewhere else on the map");
             return false;
           }
         });
@@ -1392,8 +1378,6 @@ var museumApp = (function() {
           }
           lat = latLng.lat();
           lng = latLng.lng();
-        } else {
-          console.log("Wrong number of inputs in google.maps.Polygon.prototype.contains.LatLng");
         }
         // Raycast point in polygon method
         numPaths = this.getPaths().getLength();
@@ -1512,13 +1496,7 @@ var museumApp = (function() {
         };
         // GEOLOCATION error callback
         var geoError = function(error) {
-          console.log('local location not found 😞 with error: ' + geolocationErrorCodes[error]);
-        };
-        var geolocationErrorCodes = {
-          0: 'inknown Error',
-          1: 'permission denied',
-          2: 'postion unavailable',
-          3: 'timed out',
+          // no error report in UI as button is not visible unless sucessful
         };
         // try and get users geolocation from browser service
         navigator.geolocation.getCurrentPosition(geoSuccess, geoError, geoOptions);
@@ -1528,15 +1506,6 @@ var museumApp = (function() {
     // Method to add custom knockout binding handlers
     //-----------------------------------------------------
     var koBindingHandlers = function() {
-
-      // debug helper (not used in app) that jquery fades text in/out when its binding value changes
-      // ko.bindingHandlers.fadeInText = {
-      //   update: function(element, valueAccessor) {
-      //     $(element).hide();
-      //     ko.bindingHandlers.text.update(element, valueAccessor);
-      //     $(element).fadeIn();
-      //   }
-      // };
 
       // custom knockout binding handler for GOOGLE MAP
       ko.bindingHandlers.mapPanel = {

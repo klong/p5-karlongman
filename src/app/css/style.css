@@ -65,6 +65,11 @@ p.weight3 {
 }
 
 
+.appUIWarn {
+  margin-top: 12px;
+}
+
+
 .noDisplay {
   display: none;
 }
@@ -87,6 +92,7 @@ p.weight3 {
 
 .map-container {
   padding: 0;
+  margin: 0;
   height: 100%;
   width: 100%;
 }
@@ -96,6 +102,12 @@ p.weight3 {
   height: 150px;
   width: 300px;
 }
+
+
+.topbar {
+  background-color: red;
+}
+
 
 .breadcrumb .section{
   line-height: 32px;
@@ -117,12 +129,6 @@ p.weight3 {
   margin: 0;
   padding-bottom: 12px;
   line-height: 42px;
-}
-
-
-.filter-control {
-  background-color: red;
-  padding-left: 10px;
 }
 
 

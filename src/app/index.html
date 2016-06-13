@@ -16,38 +16,44 @@
 
 <body class="initial-hide">
   <!-- MUSEUM APP loading screen - START -->
-  <div id="loadingArea" class="container loadingArea" data-bind="visible: !museumApp.googleFail">
+  <section id="loadingArea" class="container loadingArea" data-bind="visible: !museumApp.googleFail">
     <div class="ui loading circular inverted segment loader-area">
       <div class="ui header">
         <h3>Loading Neighborhood map</h3></div>
     </div>
-  </div>
+  </section>
   <!-- MUSEUM APP loading screen - END -->
   <!-- MUSEUM APP error feedback - START -->
-  <div class="container appError" data-bind="visible: museumApp.googleFail, css: {appFail: true}">
-    <section data-bind="html: museumApp.googleFail">
-    </section>
-  </div>
+  <section class="container appError" data-bind="visible: museumApp.googleFail, css: {appFail: museumApp.googleFail}">
+    <p data-bind="html: museumApp.googleFail"></p>
+  </section>
   <!-- MUSEUM APP error feedback - END -->
   <!-- MUSEUM APP content - START -->
-  <div class="ui container">
-    <div class="ui header fluid medium gray label topbar">
-      <i class="world blue icon"></i>
-      <div class="content">
-        Neighborhood Map
+  <main class="ui container">
+    <header class="topbar ui header fluid">
+      <i class="large world blue icon"></i>
+      <div class="ui content">
+        <span>Neighborhood Map</span>
         <div class="ui right floated blue label" data-bind="visible: uiModel.obsHelpVisible">
-          <i class="help circle icon"></i> double click on the map to search for new museum objects
+          <i class="help circle icon"></i>
+          <span>double click on map to search for new places</span>
         </div>
       </div>
-    </div>
+    </header>
     <!-- MAP area START -->
-    <div class="ui map-container">
-      <div id="map" class="map-view" data-bind="mapPanel"></div>
-    </div>
+    <section class="map-container">
+      <div id="map" class=" ui segment map-view" data-bind="mapPanel"></div>
+    </section>
     <!-- MAP area END -->
-    <div id="searchResultsList" class="ui segment searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList()">
+    <!-- MUSEUM APP UI warning feedback - START -->
+    <section class="container appUIWarn" data-bind="visible: uiModel.obsUIerrorHtml, css: {appUIWarn: uiModel.obsUIerrorHtml}">
+      <div class="ui small negative message" data-bind="html: uiModel.obsUIerrorHtml">
+      </div>
+    </section>
+    <!-- MUSEUM APP UI warning feedback - END -->
+    <section id="searchResultsList" class="ui segment searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList()">
       <!-- APP controls START -->
-      <div id="appControls" class="ui stackable map-controls-area">
+      <aside id="appControls" class="ui stackable map-controls-area">
         <div class="ui small buttons">
           <button class="ui primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="text: uiModel.compNumOfPlacesForZoomOnMap ,click: mapHelpers.showAllMarkers"><span class="label-span"></span></button>
           <button class="ui secondary button" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
@@ -58,14 +64,14 @@
         </div>
         <div class="ui left pointing orange label" data-bind="visible: mapsModel.obsFilterSearch() !== '', text: uiModel.compFilterLabelText">
         </div>
-      </div>
+      </aside>
       <!-- APP controls END -->
       <!-- MUSEUM MARKERS list START -->
-      <div id="mapMarkersList" class="ui container results mapMarkersList">
+      <section id="mapMarkersList" class="ui container results mapMarkersList">
         <!-- map markers list -->
         <div class="ui very relaxed selection celled list">
           <!-- ko foreach: {data: mapsModel.compSortedMapMarkers, as: 'museumMarker'}-->
-          <div class="item" data-bind="click: $parent.mapHelpers.markerListClick.bind($data)">
+          <article class="item" data-bind="click: $parent.mapHelpers.markerListClick.bind($data)">
             <div class="right floated content">
               <div class="circular small ui basic icon button" data-bind="click: $parent.mapHelpers.removeMarker.bind($data)">
                 <i class="remove icon"></i>
@@ -76,14 +82,14 @@
               <div class="header" data-bind="text: prefPlaceMarker.labelContent"></div>
               <div class="description" data-bind="visible: $data.obsMuseumMarkerListLabel, text: $data.obsMuseumMarkerListLabel"></div>
             </div>
-          </div>
+          </article>
           <!-- /ko -->
         </div>
-      </div>
-    </div>
+      </section>
+    </section>
     <!-- MUSEUM MARKERS list END -->
     <!-- MUSUEUM OBJECT PLACES list START -->
-    <div id="musuemObjectPlaceList" class="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemPlaceList()">
+    <section id="musuemObjectPlaceList" class="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemPlaceList()">
       <div class="ui container">
         <div class="ui divider"></div>
         <div class="ui large breadcrumb">
@@ -95,7 +101,7 @@
         </div>
         <div class="ui large very relaxed selection celled list">
           <!-- ko foreach: {data: uiModel.obsCurrentPlaceObjects, as: 'museumObjectPlace'}-->
-          <div class="item" data-bind="click: $parent.mapHelpers.objectPlaceListClick.bind($data)">
+          <article class="item" data-bind="click: $parent.mapHelpers.objectPlaceListClick.bind($data)">
             <i class="large map top aligned icon"></i>
             <div class="content">
               <div class="header" data-bind="text: museumObjectPlace.fields.name"></div>
@@ -104,33 +110,32 @@
             <div class="right floated content">
               <div class="ui large circular label" data-bind="text: museumObjectPlace.fields.museumobject_count"></div>
             </div>
-          </div>
+          </article>
           <!-- /ko -->
         </div>
       </div>
-    </div>
-
+    </section>
     <!-- MUSUEUM OBJECT PLACES list END -->
     <!-- MUSUEUM OBJECTS list START -->
-    <div id="musuemObjectsList" class="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjectsList()">
+    <section id="musuemObjectsList" class="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjectsList()">
       <div class="ui container">
         <div class="ui divider"></div>
         <div class="ui large breadcrumb">
           <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
-            <div class="ui basic label">Places</div>
+            <div class="ui basic label"><span>Places</span></div>
           </div>
           <i class="orange arrow right icon"></i>
           <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
             <div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div>
           </div>
           <i class="orange arrow right icon"></i>
-          <div class="active section" data-bind="visible: uiModel.obsCurrentMuseumObjects().length > 0, text: uiModel.compObjectPlaceCrumb"></div>
+          <div class="ui active section" data-bind="visible: uiModel.obsCurrentMuseumObjects().length > 0, text: uiModel.compObjectPlaceCrumb"></div>
           <i class="ui tiny orange exchange icon" data-bind="visible: museumDataHelpers.loadMorePlacesVisible"></i>
-          <div class="ui mini blue button" data-bind="visible: museumDataHelpers.loadMorePlacesVisible, click: museumDataHelpers.loadMorePlaceObjects"><i class="refresh icon"></i> load 45 more objects</div>
+          <div class="ui mini blue button" data-bind="visible: museumDataHelpers.loadMorePlacesVisible, click: museumDataHelpers.loadMorePlaceObjects"><i class="refresh icon"></i><span>load more</span></div>
         </div>
         <div class="ui large middle aligned selection divided list">
           <!-- ko foreach: {data: uiModel.obsCurrentMuseumObjects, as: 'museumObject'}-->
-          <div class="item" data-bind="click: $parent.mapHelpers.objectListClick.bind($data)">
+          <article class="item" data-bind="click: $parent.mapHelpers.objectListClick.bind($data)">
             <img class="tiny rounded image item" width="70" height="70" src="img/VandA_logo70x70.png" alt="Victoria and Albert Museum logo" data-bind="attr:{src: museumObject.imgURL, alt: museumObject.fields.object}">
             <div class="content">
               <div class="header" data-bind="text: museumObject.fields.title"></div>
@@ -138,14 +143,14 @@
                 <p data-bind="text: museumObject.fields.object + ' ' + museumObject.fields.artist + ', ' + museumObject.fields.year_start"></p>
               </div>
             </div>
-          </div>
+          </article>
           <!-- /ko -->
         </div>
       </div>
-    </div>
+    </section>
     <!-- MUSUEUM OBJECTS list END -->
     <!-- MUSUEUM OBJECT DETAILS div START -->
-    <div id="musuemObjectsDetails" class="musuemObjectsDetails" data-bind="visible: uiModel.obsSelectedMusuemObject()">
+    <section id="musuemObjectsDetails" class="musuemObjectsDetails" data-bind="visible: uiModel.obsSelectedMusuemObject()">
       <div class="ui container">
         <div class="ui divider"></div>
         <div class="ui large breadcrumb">
@@ -165,7 +170,7 @@
         </div>
         <div class="ui divider"></div>
         <!-- ko foreach: {data: uiModel.obsSelectedMusuemObject, as: 'selectedObj'}-->
-        <div class="segment">
+        <article class="segment">
           <!-- ko foreach: {data: selectedObj.fields.image_set, as: 'imageInSet'}-->
           <img class="ui centered fluid rounded image" width="70" height="70" src="img/VandA_logo70x70.png" alt="none" data-bind="attr: {src: 'http://media.vam.ac.uk/media/thira/' + imageInSet.fields.local, alt: selectedObj.fields.object}" />
           <!-- /ko -->
@@ -186,19 +191,19 @@
               </div>
             </div>
           </div>
-        </div>
+        </article>
         <!-- /ko -->
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
   <!-- MUSUEUM OBJECT DETAILS div END -->
   <!-- MUSEUM APP content - END -->
   <!-- ESSENTIAL LIBRARY SCRIPTS -->
   <!-- APP SCRIPTS  -->
-  <script src="js/library/jquery-1.12.4.min.js"></script>
-  <script src="js/library/semantic.js"></script>
-  <script src="js/library/knockout.js"></script>
-  <script src="js/app.js"></script>
+  <script src="./js/library/jquery-1.12.4.min.js"></script>
+  <script src="./js/library/semantic.js"></script>
+  <script src="./js/library/knockout.js"></script>
+  <script src="./js/app.js"></script>
   <!-- GOOGLE MAPS API -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places&callback=window.googleSuccess" onerror="window.googleError()"></script>
 </body>
