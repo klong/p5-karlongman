@@ -77,6 +77,13 @@ p.weight3 {
 }
 
 
+.fadeout {
+  transition-property: opacity;
+  transition-duration: 3s;
+  opacity: 0;
+}
+
+
 .noDisplay {
   display: none;
 }
