@@ -18,7 +18,7 @@
   <!-- MUSEUM APP loading screen - START -->
   <section id="loadingArea" class="container loadingArea" data-bind="visible: !museumApp.googleFail">
     <div class="ui loading circular inverted segment loader-area">
-      <div class="ui header">
+      <div class="ui large header">
         <h3>Loading Neighborhood map</h3></div>
     </div>
   </section>
@@ -29,47 +29,46 @@
   </section>
   <!-- MUSEUM APP error feedback - END -->
   <!-- MUSEUM APP content - START -->
-  <main class="ui container">
+  <main class="ui container app">
     <header class="topbar ui header fluid">
-      <i class="large world blue icon"></i>
       <div class="ui content">
-        <span>Neighborhood Map</span>
-        <div class="ui right floated blue label" data-bind="visible: uiModel.obsHelpVisible">
-          <i class="help circle icon"></i>
-          <span>double click on map to search for new places</span>
-        </div>
+        <div class="ui large orange ribbon label"><h1>Neighborhood Map</h1></div>
+      </div>
+      <button class="ui small blue button" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
+      <div class="ui medium label" data-bind="visible: uiModel.obsHelpVisible">
+        <i class="search icon"></i>
+        <span>double click on the map to search for new places</span>
       </div>
     </header>
     <!-- MAP area START -->
     <section class="map-container">
-      <div id="map" class=" ui segment map-view" data-bind="mapPanel"></div>
+      <div id="map" class="ui segment map-view" data-bind="mapPanel"></div>
     </section>
     <!-- MAP area END -->
     <!-- MUSEUM APP UI warning feedback - START -->
-    <section class="container appUIWarn" data-bind="visible: uiModel.obsUIerrorHtml, css: {appUIWarn: uiModel.obsUIerrorHtml}">
-      <div class="ui small negative message" data-bind="html: uiModel.obsUIerrorHtml">
+    <section class="ui appUIWarn" data-bind="visible: uiModel.obsUIerrorHtml, css: {appUIWarn: uiModel.obsUIerrorHtml}">
+      <div class="ui medium negative message">
+        <i class="pointing right icon"></i>
+        <span data-bind="html: uiModel.obsUIerrorHtml"></span>
       </div>
     </section>
     <!-- MUSEUM APP UI warning feedback - END -->
     <section id="searchResultsList" class="ui segment searchResultsList" data-bind="visible: uiModel.compShowMusuemMarkersList()">
       <!-- APP controls START -->
       <aside id="appControls" class="ui stackable map-controls-area">
-        <div class="ui small buttons">
-          <button class="ui primary button" id="btn_goAll" type="button" name="fitAllMarkers" data-bind="text: uiModel.compNumOfPlacesForZoomOnMap ,click: mapHelpers.showAllMarkers"><span class="label-span"></span></button>
-          <button class="ui secondary button" id="btn_golocal" type="button" name="mapGoLocal" data-bind="visible: mapsModel.obsUserLocalPlace,  click: mapHelpers.searchUsersLocation">Your Neighbourhood</button>
-        </div>
+        <div class="ui mini blue button" data-bind="click: mapHelpers.showAllPlaces"><h5 data-bind="text: uiModel.compNumOfFilteredPlaces"></h5></div>
         <div class="ui small action input">
           <input type="text" data-bind="textInput: mapsModel.obsFilterSearch">
           <button class="ui small button" type="button" data-bind="text: uiModel.compFilterButtonLabel, click: museumDataHelpers.clearFilter"></button>
         </div>
-        <div class="ui left pointing orange label" data-bind="visible: mapsModel.obsFilterSearch() !== '', text: uiModel.compFilterLabelText">
+        <div class="ui left pointing large orange label" data-bind="visible: mapsModel.obsFilterSearch() !== '', text: uiModel.compFilterLabelText">
         </div>
       </aside>
       <!-- APP controls END -->
       <!-- MUSEUM MARKERS list START -->
       <section id="mapMarkersList" class="ui container results mapMarkersList">
         <!-- map markers list -->
-        <div class="ui very relaxed selection celled list">
+        <div class="ui very relaxed selection list">
           <!-- ko foreach: {data: mapsModel.compSortedMapMarkers, as: 'museumMarker'}-->
           <article class="item" data-bind="click: $parent.mapHelpers.markerListClick.bind($data)">
             <div class="right floated content">
@@ -92,14 +91,14 @@
     <section id="musuemObjectPlaceList" class="musuemObjectPlaceList" data-bind="visible: uiModel.compShowMusuemPlaceList()">
       <div class="ui container">
         <div class="ui divider"></div>
-        <div class="ui large breadcrumb">
-          <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
-            <div class="ui basic label">Places</div>
+        <div class="ui breadcrumb">
+          <div class="section extra-height">
+            <div class="ui mini blue button" data-bind="click: mapHelpers.showAllPlaces"><h5 data-bind="text: uiModel.compNumOfFilteredPlaces"></h5></div>
           </div>
-          <i class="orange arrow right icon"></i>
-          <div class="active section" data-bind="text: uiModel.compMuseumMarkerCrumb, click: museumDataHelpers.clearSelectedObjectPlace"></div>
+          <i class="mini orange arrow right icon"></i>
+          <div class="ui active basic label" data-bind="click: museumDataHelpers.clearSelectedObjectPlace"><h5 data-bind="text: uiModel.compMuseumMarkerCrumb"></h5></div>
         </div>
-        <div class="ui large very relaxed selection celled list">
+        <div class="ui large very relaxed selection list">
           <!-- ko foreach: {data: uiModel.obsCurrentPlaceObjects, as: 'museumObjectPlace'}-->
           <article class="item" data-bind="click: $parent.mapHelpers.objectPlaceListClick.bind($data)">
             <i class="large map top aligned icon"></i>
@@ -108,7 +107,7 @@
               <div class="meta" data-bind="text: museumObjectPlace.fields.type"></div>
             </div>
             <div class="right floated content">
-              <div class="ui large circular label" data-bind="text: museumObjectPlace.fields.museumobject_count"></div>
+              <div class="ui small label"><span data-bind="text: museumObjectPlace.fields.museumobject_count + ' museum objects'"></span></div>
             </div>
           </article>
           <!-- /ko -->
@@ -120,20 +119,20 @@
     <section id="musuemObjectsList" class="musuemObjectsList" data-bind="visible: uiModel.compShowMusuemObjectsList()">
       <div class="ui container">
         <div class="ui divider"></div>
-        <div class="ui large breadcrumb">
-          <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
-            <div class="ui basic label"><span>Places</span></div>
+        <div class="ui breadcrumb">
+          <div class="section extra-height">
+            <div class="ui mini blue button"><h5 data-bind="click: mapHelpers.showAllPlaces, text: uiModel.compNumOfFilteredPlaces"></h5></div>
           </div>
-          <i class="orange arrow right icon"></i>
-          <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
-            <div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div>
+          <i class="mini orange arrow right icon"></i>
+          <div class="section extra-height" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
+            <div class="ui mini blue button"><h5 data-bind="text: uiModel.compMuseumMarkerCrumb"></h5></div>
           </div>
-          <i class="orange arrow right icon"></i>
-          <div class="ui active section" data-bind="visible: uiModel.obsCurrentMuseumObjects().length > 0, text: uiModel.compObjectPlaceCrumb"></div>
+          <i class="mini orange arrow right icon"></i>
+          <div class="ui active basic label extra-height" data-bind="visible: uiModel.obsCurrentMuseumObjects().length > 0"><h5 data-bind="html: uiModel.compObjectPlaceCrumb"></h5></div>
           <i class="ui tiny orange exchange icon" data-bind="visible: museumDataHelpers.loadMorePlacesVisible"></i>
-          <div class="ui mini blue button" data-bind="visible: museumDataHelpers.loadMorePlacesVisible, click: museumDataHelpers.loadMorePlaceObjects"><i class="refresh icon"></i><span>load more</span></div>
+          <div class="ui mini orange button" data-bind="visible: museumDataHelpers.loadMorePlacesVisible, click: museumDataHelpers.loadMorePlaceObjects"><i class="refresh icon"></i><span>load more objects</span></div>
         </div>
-        <div class="ui large middle aligned selection divided list">
+        <div class="ui large middle aligned selection celled list">
           <!-- ko foreach: {data: uiModel.obsCurrentMuseumObjects, as: 'museumObject'}-->
           <article class="item" data-bind="click: $parent.mapHelpers.objectListClick.bind($data)">
             <img class="tiny rounded image item" width="70" height="70" src="img/VandA_logo70x70.png" alt="Victoria and Albert Museum logo" data-bind="attr:{src: museumObject.imgURL, alt: museumObject.fields.object}">
@@ -153,20 +152,20 @@
     <section id="musuemObjectsDetails" class="musuemObjectsDetails" data-bind="visible: uiModel.obsSelectedMusuemObject()">
       <div class="ui container">
         <div class="ui divider"></div>
-        <div class="ui large breadcrumb">
-          <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemMarker">
-            <div class="ui basic label">Places</div>
+        <div class="ui breadcrumb">
+          <div class="section extra-height">
+            <div class="ui mini blue button"><h5 data-bind="click: mapHelpers.showAllPlaces, text: uiModel.compNumOfFilteredPlaces"></h5></div>
           </div>
-          <i class="orange arrow right icon"></i>
-          <div class="section" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
-            <div class="ui basic label" data-bind="text: uiModel.compMuseumMarkerCrumb"></div>
+          <i class="mini orange arrow right icon"></i>
+          <div class="section extra-height" data-bind="click: museumDataHelpers.clearSelectedObjectPlace">
+            <div class="ui mini blue button"><h5 data-bind="text: uiModel.compMuseumMarkerCrumb"></h5></div>
           </div>
-          <i class="orange arrow right icon"></i>
-          <div class="section" data-bind="click: museumDataHelpers.clearSelectedMusuemObject">
-            <div class="ui basic label" data-bind="text: uiModel.compObjectPlaceCrumb"></div>
+          <i class="mini orange arrow right icon"></i>
+          <div class="section extra-height" data-bind="click: museumDataHelpers.clearSelectedMusuemObject">
+            <div class="ui mini blue button"><h5 data-bind="html: uiModel.compObjectPlaceCrumb"></h5></div>
           </div>
-          <i class="orange arrow right icon"></i>
-          <div class="active section" data-bind="text: uiModel.compMusuemObjectCrumb"></div>
+          <i class="mini orange arrow right icon"></i>
+          <div class="ui active basic label"><h5 data-bind="text: uiModel.compMusuemObjectCrumb"></h5></div>
         </div>
         <div class="ui divider"></div>
         <!-- ko foreach: {data: uiModel.obsSelectedMusuemObject, as: 'selectedObj'}-->
@@ -200,10 +199,10 @@
   <!-- MUSEUM APP content - END -->
   <!-- ESSENTIAL LIBRARY SCRIPTS -->
   <!-- APP SCRIPTS  -->
-  <script src="./js/library/jquery-1.12.4.min.js"></script>
-  <script src="./js/library/semantic.js"></script>
-  <script src="./js/library/knockout.js"></script>
-  <script src="./js/app.js"></script>
+  <script src="js/library/jquery-1.12.4.min.js"></script>
+  <script src="js/library/semantic.js"></script>
+  <script src="js/library/knockout.js"></script>
+  <script src="js/app.js"></script>
   <!-- GOOGLE MAPS API -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places&callback=window.googleSuccess" onerror="window.googleError()"></script>
 </body>
