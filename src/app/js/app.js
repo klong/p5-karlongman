@@ -708,7 +708,7 @@ var museumApp = (function() {
             radius: searchRadius, // km radius to restrict search results
             limit: 45, // 45 is maximum amount places returned by V&A API per request
           },
-          url: 'http://www.vam.ac.uk/api/json/place/search', // V&A museum collection.places search REST service
+          url: 'https://www.vam.ac.uk/api/json/place/search', // V&A museum collection.places search REST service
           isLoaded: 'no'
         };
         if (offset) {
@@ -772,7 +772,7 @@ var museumApp = (function() {
             limit: 45, // note: 45 is max amount of museum objects results allowed on a single AJAX call by API
             // images: 1 // only get results with images
           },
-          url: 'http://www.vam.ac.uk/api/json/museumobject/', // V&A museum collection.museumobject search REST service
+          url: 'https://www.vam.ac.uk/api/json/museumobject/', // V&A museum collection.museumobject search REST service
           isLoaded: 'no'
         };
         var placeObjectsDataResults = musuemDataIfExists(resourceRefObj.modelCollection, placePrimaryKey);
@@ -809,7 +809,7 @@ var museumApp = (function() {
           search_parameters: {
             object_number: museumObjectNumber
           },
-          url: 'http://www.vam.ac.uk/api/json/museumobject/' + museumObjectNumber, // V&A museum collection.museumobject search REST service
+          url: 'https://www.vam.ac.uk/api/json/museumobject/' + museumObjectNumber, // V&A museum collection.museumobject search REST service
           isLoaded: 'no'
         };
         // make an AJAX async call for placeObjects data we dont store this object details data
