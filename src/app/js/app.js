@@ -7,7 +7,8 @@ var museumApp = (function() {
   // vars are objects as museumApp will add property values
   var museumData = {};
   var museumViewModel = {
-    ready: false
+    ready: false,
+    makingDefaultPlaces: true // makingDefaultPlaces is true until we check for any local stored museum data
   };
   var googleFail = false;
 
@@ -63,15 +64,17 @@ var museumApp = (function() {
   };
 
   var makeInitMapmuseumData = function() {
-    var initData = initmuseumPlaces;
     if ((!museumApp.localStorageP()) || (museumApp.museumData.data === undefined)) {
+      var initData = initmuseumPlaces;
       // localStorage is disabled or is the first time app is run.
       // so make some default museumMarkers using lat lng locations in initmuseumPlaces
       console.log('first time app run or no local storage');
       // make default 5 museum places map markers on map
       makeDefaultMusuemPlaces(initData);
-    } else { // we have localStorage museumData
+    } else {
       museumApp.museumViewModel.vm.mapHelpers.rebuildMarkersFromMusuemData();
+      // we have localStorage museumData so makingDefaultPlaces is false
+      museumViewModel.makingDefaultPlaces = false;
     }
   };
 
@@ -107,7 +110,6 @@ var museumApp = (function() {
     //---------------------------------------------------------
     if (localStorageP()) {
       if (localStorage.museumDataStored) {
-        //console.log('GOT SOME LOCAL museumDataStored');
         // have some exisiting localStorage.museumDataStored
         // rehydrate the local stringify stored JSON data
         // NOTE: needed to add new property on museumData obj for this to work ??
@@ -129,7 +131,7 @@ var museumApp = (function() {
     $('#loadingArea').hide("slow");
     // unhide the initial hidden divs of UI (hidden make display less messy)
     $('body').removeClass('initial-hide');
-    // set browser window resize handler to show all markers
+    // set browser window resize handler to show all map markers
     window.addEventListener("resize", function() {
       museumViewModel.vm.mapHelpers.zoomToAllPlaces();
     });
@@ -175,6 +177,7 @@ var museumApp = (function() {
             setTimeout(clearMuseumMarker, clearMarkerWait);
             return false;
           }
+          // we have some museum object places data
           var filteredDataArray = placesArray.filter(function(hasSomeObjects) {
             return hasSomeObjects.fields.museumobject_count > 0;
           });
@@ -189,10 +192,24 @@ var museumApp = (function() {
             museumCollectionType: resourceRefObj.modelCollection,
             museumData: museumDataResult
           };
-          // museumplaces are also stored inside the Museum Marker
+          // museum object places are also stored inside the Museum Marker
           // so it has references to the places within radius of search
           updateTheMuseumMarker(musuemCollectionType, museumDataResult, updateObjectRef);
-          museumApp.museumViewModel.vm.uiModel.obsSelectedMusuemMarker(updateObjectRef);
+          if (museumViewModel.makingDefaultPlaces) {
+            var markersMadeCount = museumApp.museumViewModel.vm.mapsModel.obsArrayMapMarkers().length;
+            var totalInitialMarkers = initmuseumPlaces.length;
+            if (markersMadeCount > totalInitialMarkers) {
+              // have we made all of the markers made referenced in initmuseumPlaces object
+              // this is the first new marker
+              museumViewModel.makingDefaultPlaces = false;
+              museumApp.museumViewModel.vm.uiModel.obsSelectedMusuemMarker(updateObjectRef);
+            }
+          } else {
+            // all inital markers have been made or made from local storage
+            // so new markers made can be selected straight away
+            museumApp.museumViewModel.vm.museumDataHelpers.clearSelectedMusuemMarker();
+            museumApp.museumViewModel.vm.uiModel.obsSelectedMusuemMarker(updateObjectRef);
+          }
         } else if (musuemCollectionType === 'placeObjects') {
           // add an external imageURL for each museumObject in the museumDataResult
           // when its 'primary_image_id' field is "" we use a default image thumbnail
@@ -474,7 +491,7 @@ var museumApp = (function() {
         boxClass: 'musuemobject-infoBox',
         content: '',
         disableAutoPan: false,
-        pixelOffset: new google.maps.Size(-150, 0), // offset to show window below musuemMarker label
+        pixelOffset: new google.maps.Size(-150, 28), // offset to show window below musuemMarker label
         zIndex: null,
         closeBoxURL: "",
         closeBoxMargin: "",
@@ -640,13 +657,9 @@ var museumApp = (function() {
       };
 
       var clearSelectedObjectPlace = function() {
+        clearSelectedMusuemObject();
         uiModel.obsSelectedMusuemObjectPlace(false);
         uiModel.obsCurrentMuseumObjects(false);
-        clearSelectedMusuemObject();
-        // pan to current selected musuem marker
-        if (uiModel.obsSelectedMusuemMarker()) {
-          mapHelpers.panMapToMuseumMarker(uiModel.obsSelectedMusuemMarker());
-        }
       };
 
       var clearSelectedMusuemObject = function() {
@@ -706,13 +719,14 @@ var museumApp = (function() {
         var placeDataResults = musuemDataIfExists(resourceRefObj.modelCollection, resourceRefObj.placeID);
         // we have no exisitng museumData
         if (placeDataResults !== false) {
-          //---------------------------------------------------------
-          // update the uiModel with museum object places
-          //---------------------------------------------------------
+          //--------------------------------------------------------------
+          // have existing museum object places data so update the uiModel
+          //--------------------------------------------------------------
           uiModel.obsCurrentPlaceObjects(placeDataResults);
-          //---------------------------------------------------------
+          uiModel.obsSelectedMusuemMarker(museumMarker);
+          mapHelpers.panMapToMuseumMarker(museumMarker);
         } else {
-          // else use async AJAX call to try and get some place data and update the uiModel if success
+          // else use async AJAX call to try and get some museum objects data and update the uiModel if success
           var index = 0; // NOTE needed as first argument to getAsyncResource function
           getAsyncResource(index, resourceRefObj, museumMarker);
         }
@@ -1223,7 +1237,8 @@ var museumApp = (function() {
         marker.addListener('click', function() {
           panMapToMuseumMarker(museumMarker);
           if (uiModel.obsSelectedMusuemMarker()) {
-            museumDataHelpers.clearSelectedObjectPlace();
+            // another marker is currently selected
+            museumDataHelpers.clearSelectedMusuemMarker();
           }
           uiModel.obsSelectedMusuemMarker(museumMarker);
           // indicate marker with a short bounce
@@ -1238,6 +1253,7 @@ var museumApp = (function() {
       var searchHere = function(location) {
         // if location is not valid google LatLng object (e.g comes from initmuseumPlaces)
         // convert it to a google LatLng
+        // if uiSelectMarkerP is true the marker will be 'selected' on the map
         if (!(location instanceof google.maps.LatLng)) {
           location = new google.maps.LatLng(location.lat, location.lng);
         }
@@ -1287,43 +1303,50 @@ var museumApp = (function() {
                 }
               } else {
                 //no peferedPlaceP address
-                // no best place so choose first address of the original geocode results
+                // no 'best place' so choose first address of the original geocode results
                 // usually a 'street address'
                 bestPlace = results[0];
               }
+              // got place on map - see what to do with it
               if (bestPlace.types[0] === "country") {
-                // google geocoder returns a 'country' e.g United Kingdom for clicks in areas near coast
-                // so we dont want this as a 'country' wide search is too general
+                // google geocoder tends to return a 'country' e.g United Kingdom for clicks in areas near coast
+                // so we don't want this as it is a too general area
                 uiModel.obsUIerrorHtml("Sorry can't find any places at this location");
                 return false;
               }
               var musMarkerforPlace = mapMarkerExistsRef(bestPlace);
               if (musMarkerforPlace !== false) {
-                // museum marker for bestplace already exists in obsArrayMapMarkers
+                // ------------------------------------------------------
+                // the museum marker already exists in obsArrayMapMarkers
+                // ------------------------------------------------------
                 if (mapsModel.obsFilterSearch !== '') {
                   var indexOf = mapsModel.compFilterMapList().indexOf(musMarkerforPlace);
                   if (indexOf === -1) {
                     // users location is not in the current filtered place list
-                    // so we have to clear the filter
+                    // so we have to clear any current filter
                     museumDataHelpers.clearFilter();
                   }
                 }
                 panMapToMuseumMarker(musMarkerforPlace);
+                // select the musuem marker in the ui
                 uiModel.obsSelectedMusuemMarker(musMarkerforPlace);
                 // indicate marker with a short bounce
                 musuemMarkerBounce(musMarkerforPlace);
+                return true;
               } else {
-                // create a new museumMarker for the bestPlace
+                // a new bestPlace so create a museum marker
                 var museumMarker = makeMuseumMarker(bestPlace);
                 // clear map filter if active as its a 'new' marker and cannot be in the filtered list
                 if (mapsModel.obsFilterSearch !== '') {
                   museumDataHelpers.clearFilter();
                 }
-                //-------------------------------------------------------------------------
+                //----------------------------------------------------------------------------------
                 // async request V&A museum place search
-                //-------------------------------------------------------------------------
+                // note: we cannot select the marker in ui until museum object async search callback
+                //----------------------------------------------------------------------------------
                 museumDataHelpers.requestMuseumPlaces(museumMarker, searchRadius);
-                //-------------------------------------------------------------------------
+                //----------------------------------------------------------------------------------
+                return true;
               }
             } else {
               // no geocode results found
@@ -1708,8 +1731,8 @@ var museumApp = (function() {
       // -------------------------------------------------------------------
       uiModel.obsUIerrorHtml.subscribe(function(newValue) {
         // pause a bit then set the UI message to false
-        var aWhile = 1800; // wait in milliseconds
-        var clearMessage= function() {
+        var aWhile = 3000; // wait in milliseconds
+        var clearMessage = function() {
           clearTimeout(uiModel.appUIWarnTimeOutID);
           uiModel.obsUIerrorHtml(false);
         };
@@ -1774,8 +1797,10 @@ window.googleSuccess = function() {
       $.getScript("js/library/MarkerWithLabel.js")
         .done(function() {
           // google class scripts loaded
+          // ---------------------------------------
           // init the museumApp and its viewModel
           museumApp.init();
+          // ---------------------------------------
         })
         .fail(function() {
           // MarkerWithLabel script failed to load
